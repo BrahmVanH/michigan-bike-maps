@@ -1,18 +1,43 @@
-<script lang="ts">
+<!-- <script lang="ts">
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import * as MapLibre from 'maplibre-gl';
 	import { onMount, onDestroy } from 'svelte';
 
 	import geoJsonFile from '../data/geo/bareback-to-slackey.geojson?raw';
 	import { getColor, getGeoJsonRouteCenter } from '$lib/helpers/leaflet';
+	import type { GeoJsonObject, LineString } from 'geojson';
+	import type { Feature, FeatureCollection } from '$lib/types';
 
 	let mapContainer: HTMLElement;
 	let map: MapLibre.Map;
 
-	const routeGeoJson = JSON.parse(geoJsonFile);
-	const routeCoordinates = routeGeoJson.geometry.coordinates;
+	const routeGeoJson: Feature = JSON.parse(geoJsonFile);
+
+	if (!routeGeoJson) {
+		throw new Error('No GeoJSON file found');
+	}
+	console.log('routeGeoJson', routeGeoJson);
+	const routeCoordinates = routeGeoJson?.geometry?.coordinates;
+
+	if (!routeCoordinates) {
+		throw new Error('No route coordinates found in GeoJSON file');
+	}
+
+	const routeCoordinatesAsCollection = routeCoordinates as FeatureCollection<LineString>;
+	console.log('routeCoordinates', routeCoordinates);
 	const routeElevations = routeCoordinates.map((coord: any) => coord[2]);
+
+	if (!routeElevations) {
+		throw new Error('No route elevations found in GeoJSON file');
+	}
+	console.log('routeElevations', routeElevations);
 	const mapCenter = getGeoJsonRouteCenter(routeGeoJson);
+
+	if (!mapCenter) {
+		throw new Error('No map center found in GeoJSON file');
+	}
+
+	
 
 	const initializeMap = () => {
 		map = new MapLibre.Map({
@@ -81,4 +106,4 @@
 	});
 </script>
 
-<div id="map" style="height: 100vh;"></div>
+<div id="map" style="height: 100vh;"></div> -->

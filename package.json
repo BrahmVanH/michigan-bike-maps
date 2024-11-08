@@ -40,8 +40,11 @@
 		"zod": "^3.23.8"
 	},
 	"dependencies": {
+		"@mapbox/togeojson": "^0.16.2",
+		"@types/xml2js": "^0.4.14",
 		"gpxparser": "^3.0.8",
 		"leaflet": "^1.9.4",
-		"maplibre-gl": "^4.7.1"
+		"maplibre-gl": "^4.7.1",
+		"xml2js": "^0.6.2"
 	}
 }

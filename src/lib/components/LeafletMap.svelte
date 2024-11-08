@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
 	import { onMount } from 'svelte';
 	import L from 'leaflet';
 	import type { LatLngTuple, Map } from 'leaflet';
@@ -152,4 +152,4 @@
 	:global(.leaflet-canvas-layer) {
 		background-color: #000000;
 	}
-</style>
+</style> -->
