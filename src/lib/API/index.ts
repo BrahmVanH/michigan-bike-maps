@@ -1,12 +1,12 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET } from '$env/static/private'
+import { AWS_REGION_PROD, AWS_ACCESS_KEY_ID_PROD, AWS_SECRET_ACCESS_KEY_PROD, AWS_S3_BUCKET_PROD } from '$env/static/private'
 
 const s3Client = new S3Client({
-  region: AWS_REGION,
+  region: AWS_REGION_PROD,
   credentials: {
-    accessKeyId: AWS_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    accessKeyId: AWS_ACCESS_KEY_ID_PROD,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY_PROD,
   },
 });
 
@@ -23,7 +23,7 @@ interface UploadGPXFileResponse {
 
 export async function uploadGPXFile(fileName: string, fileBuffer: Buffer) {
   const command = new PutObjectCommand({
-    Bucket: AWS_S3_BUCKET,
+    Bucket: AWS_S3_BUCKET_PROD,
     Key: `gpx/${fileName}`,
     Body: fileBuffer,
     ContentType: 'application/gpx+xml',
