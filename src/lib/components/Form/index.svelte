@@ -20,19 +20,19 @@
 	let uploadMessage = $state('');
 
 	const form = superForm(data, {
-        validators: zodClient(formSchema),
-        onSubmit: () => {
-            isSubmitting = true;
-        },
-        onResult: ({ result }) => {
-            console.log('form submission result: ', result);
-            isSubmitting = false;
-            
+		validators: zodClient(formSchema),
+		onSubmit: () => {
+			isSubmitting = true;
+		},
+		onResult: ({ result }) => {
+			console.log('form submission result: ', result);
+			isSubmitting = false;
+
 			if (result.type === 'success') {
 				// Set success state
 				uploadSuccess = true;
 				uploadMessage = 'Thank you! Your GPX route was successfully uploaded.';
-				
+
 				// Clear file input
 				selectedFileName = '';
 				if (fileInputRef) {
@@ -47,14 +47,14 @@
 				uploadSuccess = false;
 				uploadMessage = 'There was an error uploading your file.';
 			}
-        },
-        onError: (error) => {
-            console.log('form submission error: ', error);
-            isSubmitting = false;
-            uploadSuccess = false;
-            uploadMessage = 'There was an error uploading your file.';
-        }
-    });
+		},
+		onError: (error) => {
+			console.log('form submission error: ', error);
+			isSubmitting = false;
+			uploadSuccess = false;
+			uploadMessage = 'There was an error uploading your file.';
+		}
+	});
 
 	const { enhance, errors, message } = form;
 
@@ -133,7 +133,7 @@
 </script>
 
 <div
-	class="mx-auto mt-8 w-full max-w-md rounded-lg border border-orange-700/30 bg-black/30 p-6 shadow-xl backdrop-blur-sm"
+	class="my-auto h-min w-full max-w-md rounded-lg border border-orange-700/30 bg-black/30 p-6 shadow-xl backdrop-blur-sm"
 >
 	<h2 class="mb-4 text-2xl font-light text-orange-400">Upload GPX Route</h2>
 	{#if uploadSuccess}
@@ -157,9 +157,7 @@
 				</div>
 				<h3 class="mb-2 text-xl font-medium text-green-400">Upload Successful!</h3>
 				<p class="text-gray-300">{uploadMessage}</p>
-				<p class="mt-3 text-sm text-gray-400">
-					Your route will be processed and added to the map shortly.
-				</p>
+				<p class="mt-3 text-sm text-gray-400">Thank you for contributing to our project!</p>
 			</div>
 
 			<button

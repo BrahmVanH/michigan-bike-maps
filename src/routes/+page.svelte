@@ -1,19 +1,24 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import Form from '$lib/components/Form/index.svelte';
-	import { enhance } from '$app/forms';
 	import harlowContour from '$lib/images/harlow-area-contour-2-01.jpg';
+	import harlowContourMobile from '$lib/images/harlow-area-contour-mobile-01.jpg';
 
 	export let data: PageData;
 </script>
 
 <main class="relative flex h-screen w-screen">
 	<enhanced:img
-		class="absolute h-screen w-full object-cover"
+		class="absolute hidden h-screen w-full object-cover lg:block"
 		src={harlowContour ?? ''}
 		alt="dark themed contour map of harlow lake recreation area in marquette, michigan"
 	/>
-	<div class=" m-auto max-w-[500px]">
+	<enhanced:img
+		class="absolute h-screen w-full object-cover lg:hidden"
+		src={harlowContourMobile ?? ''}
+		alt="dark themed contour map of harlow lake recreation area in marquette, michigan"
+	/>
+	<div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
 		<Form data={data.form} />
 	</div>
 </main>

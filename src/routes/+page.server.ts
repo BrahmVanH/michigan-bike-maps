@@ -29,7 +29,7 @@ export const actions = {
       const arrayBuffer = await gpxFile.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const fileName = String(gpxFile.name);
+      const fileName = uuidv4();
 
       // Upload the file to S3
       const uploadResult = await uploadGPXFile(fileName, fileBuffer);
@@ -48,7 +48,7 @@ export const actions = {
         form,
         uploadResult: {
           success: true,
-          filename: uuidv4(),
+          fileName,
           size: gpxFile.size,
           type: gpxFile.type,
           message: 'File uploaded to S3 successfully',
