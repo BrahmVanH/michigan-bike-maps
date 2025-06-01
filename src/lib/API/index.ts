@@ -22,9 +22,10 @@ interface UploadGPXFileResponse {
 }
 
 export async function uploadGPXFile(fileName: string, fileBuffer: Buffer) {
+  const Key = `gpx/${fileName}`
   const command = new PutObjectCommand({
     Bucket: AWS_S3_BUCKET_PROD,
-    Key: `gpx/${fileName}`,
+    Key,
     Body: fileBuffer,
     ContentType: 'application/gpx+xml',
   });
