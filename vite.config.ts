@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { enhancedImages } from '@sveltejs/enhanced-img';
 import svg from '@poppanator/sveltekit-svg';
+import wasmPack from 'vite-plugin-wasm-pack';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -16,5 +17,5 @@ export default defineConfig({
 				}
 			]
 		}
-	})]
+	}), wasmPack("./gpx-file-processor-wasm")]
 });
