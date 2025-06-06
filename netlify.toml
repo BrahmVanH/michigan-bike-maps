@@ -1,19 +1,10 @@
 [build]
   command = "npm run build"
-#  functions = "netlify/functions"
   publish = "build"
 
-# Install Rust before the build
-# [[plugins]]
-#  package = "@netlify/plugin-functions-install-core"
 
 [[plugins]]
   package = "netlify-plugin-rust"
 
-# Add environment variables
 [build.environment]
   NODE_VERSION="18"
-
-# Override build command to skip the wasm step since the plugin will handle it
-# [build.commands]
-#  build = "npx vite build"
