@@ -1,11 +1,8 @@
-// src/lib/wasm-loader.ts
 import { browser } from '$app/environment';
 
-// Define a variable to store the module
 let wasmModule: any = null;
 let isLoading = false;
 
-// src/lib/wasm-loader.ts
 export async function loadWasmModule() {
   if (!browser) return null;
   if (wasmModule) return wasmModule;
@@ -13,18 +10,15 @@ export async function loadWasmModule() {
   isLoading = true;
 
   try {
-    // Use streaming instantiation
     const wasmUrl = '/wasm/gpx_file_processor_wasm_bg.wasm';
     const response = await fetch(wasmUrl);
     const responseClone = response.clone();
 
-    // Start compiling while downloading
     const { instance, module } = await WebAssembly.instantiateStreaming(
       responseClone,
       {}
     );
 
-    // Now load the JS glue
     const wasmModule = await import('@wasm/gpx_file_processor_wasm');
     await wasmModule.default(module);
 

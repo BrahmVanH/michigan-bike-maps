@@ -1,9 +1,24 @@
 <script lang="ts">
-	import { loadWasmModule, processGpx } from '$lib/wasm-loader';
-	import init, { process_gpx_with_analytics } from '@wasm';
-	// import init, { process_gpx_with_analytics } from '../../../../static/wasm/gpx_file_processor_wasm/';
-	import { Input } from '$lib/components/ui/input';
-	import { FormField, FormLabel, FormDescription } from '$lib/components/ui/form/';
+	/**
+	 * GPX File Upload Form Component
+	 *
+	 * This component provides a user interface for uploading GPX route files, with client-side
+	 * processing using WebAssembly for compression before submission to the server.
+	 *
+	 * Features:
+	 * - Drag and drop file upload interface
+	 * - Client-side validation for file type (.gpx)
+	 * - WebAssembly-based compression to reduce file size
+	 * - Visual feedback during upload process
+	 * - Success/error handling with appropriate user messaging
+	 */
+
+	// Import WebAssembly loader and compression function
+	import { loadWasmModule } from '$lib/wasm-loader';
+	import { reduce_compress_gpx } from '@wasm';
+
+	// Import UI components and form handling utilities
+	import { FormField } from '$lib/components/ui/form/';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import FormButton from '$lib/components/ui/form/form-button.svelte';
@@ -11,19 +26,26 @@
 	import { formSchema, type FormSchema } from './schema';
 	import { onMount } from 'svelte';
 
-	// Svelte 5 props
+	/**
+	 * Form data passed from the server-side load function
+	 * Contains form validation schema and initial values
+	 */
 	const { data }: { data: SuperValidated<Infer<FormSchema>> } = $props();
 
-	// Form state
-	let selectedFileName = $state('');
-	let isSubmitting = $state(false);
-	let isDragging = $state(false);
-	let isValid = $state(true);
-	let fileInputRef = $state<HTMLInputElement | null>(null);
-	let uploadSuccess = $state(false);
-	let uploadMessage = $state('');
-	let wasmLoaded = $state(false);
+	// Component state variables using Svelte 5 reactivity
+	let selectedFileName = $state(''); // Name of the selected file
+	let isSubmitting = $state(false); // Whether the form is currently submitting
+	let isDragging = $state(false); // Whether a file is being dragged over the drop zone
+	let isValid = $state(true); // Whether the selected file is a valid GPX file
+	let fileInputRef = $state<HTMLInputElement | null>(null); // Reference to the hidden file input
+	let uploadSuccess = $state(false); // Whether the upload was successful
+	let uploadMessage = $state(''); // Message to display to the user
+	let wasmLoaded = $state(false); // Whether the WebAssembly module has loaded
 
+	/**
+	 * Initialize the WebAssembly module on component mount
+	 * This ensures the compression functionality is available when needed
+	 */
 	onMount(async () => {
 		try {
 			await loadWasmModule();
@@ -33,51 +55,66 @@
 		}
 	});
 
+	/**
+	 * Initialize the form with validation and lifecycle hooks
+	 * This sets up form submission handling, validation, and result processing
+	 */
 	const form = superForm(data, {
 		validators: zodClient(formSchema),
 		onSubmit: () => {
 			isSubmitting = true;
 		},
 		onResult: ({ result }) => {
-			console.log('form submission result: ', result);
 			isSubmitting = false;
 
+			// Handle different result types with appropriate user feedback
 			if (result.type === 'success') {
-				// Set success state
 				uploadSuccess = true;
 				uploadMessage = 'Thank you! Your GPX route was successfully uploaded.';
 
-				// Clear file input
+				// Reset form state
 				selectedFileName = '';
 				if (fileInputRef) {
 					fileInputRef.value = '';
 				}
 			} else if (result.type === 'failure' && result.data?.uploadResult?.message) {
-				// Error state with message
 				uploadSuccess = false;
 				uploadMessage = result.data.uploadResult.message;
 			} else {
-				// Generic error state
 				uploadSuccess = false;
 				uploadMessage = 'There was an error uploading your file.';
 			}
 		},
 		onError: (error) => {
-			console.log('form submission error: ', error);
 			isSubmitting = false;
 			uploadSuccess = false;
 			uploadMessage = 'There was an error uploading your file.';
 		}
 	});
 
+	// Extract form utilities from the superForm instance
 	const { enhance, errors, message } = form;
 
-	// Handle file selection
+	/**
+	 * Handle file selection from the file input
+	 * Triggered when a user selects a file through the browser dialog
+	 *
+	 * @param event - The file input change event
+	 */
 	function handleFileChange(event: Event) {
 		const input = event.target as HTMLInputElement;
 		processFiles(input.files);
 	}
 
+	/**
+	 * Process the selected GPX files
+	 * This function:
+	 * 1. Validates that the file is a GPX file
+	 * 2. Compresses the file using WebAssembly if available
+	 * 3. Updates the hidden form input with the processed file
+	 *
+	 * @param files - The FileList from the file input or drop event
+	 */
 	async function processFiles(files: FileList | null) {
 		if (!files || files.length === 0) {
 			selectedFileName = '';
@@ -85,32 +122,25 @@
 			return;
 		}
 
-		// Set the selected filename immediately for UI feedback
 		selectedFileName = files[0].name;
 
-		// Validate file type first
+		// Validate file extension is .gpx
 		isValid = selectedFileName.toLowerCase().endsWith('.gpx');
 		if (!isValid) return;
 
 		if (wasmLoaded) {
 			try {
-				console.log('Processing file with WASM:', files[0].name);
-
-				// Show some processing state if needed
-				// isProcessing = true;
-
+				// Process the file using WebAssembly for compression
 				const fileText = await files[0].text();
-				const compressedFileDataArray = await process_gpx_with_analytics(fileText);
+				const compressedFileDataArray = reduce_compress_gpx(fileText);
 
-				// Create a new file from the processed data
+				// Create a new file from the compressed data
 				const blob = new Blob([compressedFileDataArray], { type: 'application/octet-stream' });
 				const compressedFile = new File([blob], files[0].name.replace('.gpx', '.gpx.gz'), {
 					type: 'application/gzip'
 				});
 
-				console.log('File processed successfully:', compressedFile.name);
-
-				// Copy the processed file to the actual form input
+				// Update the hidden form input with the compressed file
 				const formInput = document.getElementById('gpxFile') as HTMLInputElement | null;
 				if (formInput && typeof DataTransfer !== 'undefined') {
 					try {
@@ -118,7 +148,6 @@
 						dataTransfer.items.add(compressedFile);
 						formInput.files = dataTransfer.files;
 
-						// Make sure selectedFileName stays consistent
 						selectedFileName = compressedFile.name;
 					} catch (error) {
 						console.error('Error setting file input:', error);
@@ -128,12 +157,9 @@
 				console.error('Error processing file with WASM:', error);
 				uploadMessage = 'Error processing GPX file';
 				uploadSuccess = false;
-			} finally {
-				// isProcessing = false;
 			}
 		} else {
-			console.log('WASM not loaded, using original file');
-
+			// If WebAssembly is not available, use the original file
 			const formInput = document.getElementById('gpxFile') as HTMLInputElement | null;
 			if (formInput && typeof DataTransfer !== 'undefined') {
 				try {
@@ -147,7 +173,10 @@
 		}
 	}
 
-	// Handle drag events for the drop zone
+	/**
+	 * Drag and drop event handlers
+	 * These functions manage the visual state of the drop zone and handle file drops
+	 */
 	function handleDragEnter(event: DragEvent) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -176,6 +205,10 @@
 		}
 	}
 
+	/**
+	 * Reset the form to its initial state
+	 * Used after a successful upload to allow for another upload
+	 */
 	function resetForm() {
 		uploadSuccess = false;
 		uploadMessage = '';
@@ -186,20 +219,27 @@
 	}
 </script>
 
+<!-- 
+Main form container with backdrop blur effect
+Uses a semi-transparent background to maintain contrast against map backgrounds
+-->
 <div
 	class="my-auto h-min w-full max-w-md rounded-lg border border-orange-700/30 bg-black/30 p-6 shadow-xl backdrop-blur-sm"
 >
 	<h2 class="mb-4 text-2xl font-light text-orange-400">Upload GPX Route</h2>
+
+	<!-- Success state displayed after successful upload -->
 	{#if uploadSuccess}
-		<!-- Success state view -->
 		<div class="space-y-6">
 			<div class="flex flex-col items-center justify-center py-8 text-center">
+				<!-- Success icon -->
 				<div class="mb-4 rounded-full bg-green-900/30 p-3">
 					<svg
 						class="h-12 w-12 text-green-400"
 						fill="none"
 						viewBox="0 0 24 24"
 						stroke="currentColor"
+						aria-hidden="true"
 					>
 						<path
 							stroke-linecap="round"
@@ -209,40 +249,45 @@
 						/>
 					</svg>
 				</div>
+				<!-- Success message -->
 				<h3 class="mb-2 text-xl font-medium text-green-400">Upload Successful!</h3>
 				<p class="text-gray-300">{uploadMessage}</p>
 				<p class="mt-3 text-sm text-gray-400">Thank you for contributing to our project!</p>
 			</div>
 
+			<!-- Button to reset form and upload another file -->
 			<button
 				type="button"
 				class="w-full rounded-md border border-orange-800 bg-orange-800/60 px-4 py-2 text-sm font-medium text-white
-                shadow-md transition-all duration-200 ease-in-out hover:bg-orange-700/80 focus:ring-2
-                focus:ring-orange-500/50 focus:ring-offset-1 focus:outline-none"
+							shadow-md transition-all duration-200 ease-in-out hover:bg-orange-700/80 focus:ring-2
+							focus:ring-orange-500/50 focus:ring-offset-1 focus:outline-none"
 				onclick={resetForm}
 			>
 				Upload Another Route
 			</button>
 		</div>
+		<!-- Form state for file selection and upload -->
 	{:else}
-		<!-- Regular form view -->
 		<form method="POST" use:enhance enctype="multipart/form-data" class="space-y-4">
 			<FormField {form} name="gpxFile">
 				<div>
+					<!-- 
+										Drag and drop file upload area
+										Changes appearance based on drag state and file validity
+									-->
 					<div
 						role="button"
 						tabindex="0"
 						class="mt-1 flex flex-col items-center justify-center rounded-md border border-orange-700/40 p-6 transition-colors
-                        {isDragging
-							? 'border-orange-500 bg-orange-900/20'
-							: 'hover:border-orange-500/60'} 
-                        {!isValid && selectedFileName ? 'border-red-500 bg-red-900/20' : ''}"
+											{isDragging ? 'border-orange-500 bg-orange-900/20' : 'hover:border-orange-500/60'} 
+											{!isValid && selectedFileName ? 'border-red-500 bg-red-900/20' : ''}"
 						ondragenter={handleDragEnter}
 						ondragover={handleDragOver}
 						ondragleave={handleDragLeave}
 						ondrop={handleDrop}
 					>
 						<div class="flex flex-col items-center justify-center text-center">
+							<!-- File upload icon that changes color based on drag/validity state -->
 							<svg
 								class="mx-auto h-12 w-12 {isDragging
 									? 'text-orange-500'
@@ -260,6 +305,7 @@
 								/>
 							</svg>
 
+							<!-- Dynamic text based on file selection state -->
 							<div class="mt-2 flex flex-col text-sm text-gray-200">
 								<p class="font-medium">
 									{#if isDragging}
@@ -283,6 +329,11 @@
 							</div>
 						</div>
 
+						<!-- 
+												Hidden file inputs:
+												- gpxFile: The actual form input that gets submitted
+												- gpxFileHelper: Triggers the file browser dialog
+											-->
 						<input
 							type="file"
 							id="gpxFile"
@@ -304,6 +355,7 @@
 				</div>
 			</FormField>
 
+			<!-- Validation error messages -->
 			{#if $errors.gpxFile}
 				<div class="text-sm text-red-400">{$errors.gpxFile}</div>
 			{/if}
@@ -312,22 +364,25 @@
 				<div class="text-sm text-red-400">{$message}</div>
 			{/if}
 
+			<!-- Custom error message from file processing -->
 			{#if uploadMessage && !uploadSuccess}
 				<div class="rounded-md border border-red-800/30 bg-red-900/20 p-3 text-sm text-red-400">
 					{uploadMessage}
 				</div>
 			{/if}
 
+			<!-- Submit button with loading state -->
 			<div class="mt-6 flex items-center justify-end">
 				<FormButton
 					class="w-full rounded-md border border-orange-800 bg-orange-800/60 px-4 py-2 text-sm font-medium text-white 
-                    shadow-md transition-all duration-200 ease-in-out hover:bg-orange-700/80 focus:ring-2
-                    focus:ring-orange-500/50 focus:ring-offset-1 focus:outline-none"
+									shadow-md transition-all duration-200 ease-in-out hover:bg-orange-700/80 focus:ring-2
+									focus:ring-orange-500/50 focus:ring-offset-1 focus:outline-none"
 					disabled={!!(isSubmitting || (selectedFileName && !isValid))}
 				>
 					{#if isSubmitting}
 						<div
 							class="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em]"
+							aria-hidden="true"
 						></div>
 						Processing...
 					{:else}

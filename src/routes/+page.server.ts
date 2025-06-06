@@ -6,18 +6,14 @@ import { uploadGPXFile } from '@/API';
 import { v4 as uuidv4 } from 'uuid';
 
 export const load = (async () => {
-  // Create an empty form for initial page load
   const form = await superValidate(zod(formSchema));
   return { form };
 }) satisfies ServerLoad;
 
 export const actions = {
   default: async ({ request }) => {
-    console.log("request: ", request);
     const formData = await request.formData();
-    console.log("formData: ", formData);
 
-    // Check if a file was uploaded
     const gpxFile = formData.get('gpxFile') as File;
     if (!gpxFile || gpxFile.size === 0) {
       const form = await superValidate(formData, zod(formSchema));
@@ -25,25 +21,18 @@ export const actions = {
       return fail(400, { form });
     }
     try {
-      // Convert the file to an ArrayBuffer and then to a Buffer
       const arrayBuffer = await gpxFile.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
       const fileName = uuidv4() + '.gpx.gz';
 
-      // Upload the file to S3
       const uploadResult = await uploadGPXFile(fileName, fileBuffer);
 
-      console.log('S3 upload result:', uploadResult);
 
-      // IMPORTANT: Remove the file from formData before validation
-      // to prevent serialization errors
       formData.delete('gpxFile');
 
-      // Now validate the form without the file
       const form = await superValidate(formData, zod(formSchema));
 
-      // Return success with metadata
       return {
         form,
         uploadResult: {
@@ -58,13 +47,10 @@ export const actions = {
     } catch (error) {
       console.error('Error uploading to S3:', error);
 
-      // Remove the file from formData
       formData.delete('gpxFile');
 
-      // Validate the form
       const form = await superValidate(formData, zod(formSchema));
 
-      // Return the error
       return fail(500, {
         form,
         uploadResult: {
