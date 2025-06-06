@@ -2,6 +2,8 @@
 name = "gpx-file-processor-wasm"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "This wasm application is used to process gpx files ass they pass through a form in the parent sveltekit form. The program filters unnecessary data from the gpx file then compresses it and returns it to the form."
 
 
 [lib] 
