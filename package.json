@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "npm run wasm && vite dev",
-		"build": "npm run wasm && vite build",
+		"build": "npm run wasm:netlify && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -14,7 +14,8 @@
 		"lint": "prettier --check .",
 		"modulize-wasm": "node ./gpx-file-processor-wasm/modulize.js",
 		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm",
-		"wasm:netlify": "echo 'WASM build handled by Netlify plugin'"
+		"wasm:netlify": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm"
+
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.8.1",

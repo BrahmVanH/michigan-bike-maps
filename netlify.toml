@@ -1,27 +1,19 @@
 [build]
   command = "npm run build"
-  functions = "netlify/functions"
+#  functions = "netlify/functions"
   publish = "build"
 
 # Install Rust before the build
-[[plugins]]
-  package = "@netlify/plugin-functions-install-core"
+# [[plugins]]
+#  package = "@netlify/plugin-functions-install-core"
 
 [[plugins]]
-  package = "./netlify/plugins/wasm-pack-plugin"
-  [plugins.inputs]
-    wasmDir = "./gpx-file-processor-wasm"
-    targetDir = "../static/wasm"
-    target = "web"
+  package = "netlify-plugin-rust"
 
 # Add environment variables
 [build.environment]
-  RUSTUP_HOME = "/opt/buildhome/.rustup"
-  CARGO_HOME = "/opt/buildhome/.cargo"
-  PATH = "/opt/buildhome/.cargo/bin:$PATH"
   NODE_VERSION="18"
-  NETLIFY_USE_JAMMY = "true" 
 
 # Override build command to skip the wasm step since the plugin will handle it
-[build.commands]
-  build = "npx vite build"
+# [build.commands]
+#  build = "npx vite build"
