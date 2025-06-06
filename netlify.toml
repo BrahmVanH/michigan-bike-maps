@@ -6,5 +6,4 @@
 [[plugins]]
   package = "netlify-plugin-rust"
 
-[build.environment]
-  NODE_VERSION="18"
+
