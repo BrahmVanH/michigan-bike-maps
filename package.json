@@ -13,7 +13,8 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"modulize-wasm": "node ./gpx-file-processor-wasm/modulize.js",
-"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm"
+		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm",
+		"wasm:netlify": "echo 'WASM build handled by Netlify plugin'"
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.8.1",

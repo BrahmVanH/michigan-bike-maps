@@ -1,21 +1,25 @@
-# example netlify.toml
 [build]
   command = "npm run build"
   functions = "netlify/functions"
   publish = "build"
 
-  ## Uncomment to use this redirect for Single Page Applications like create-react-app.
-  ## Not needed for static site generators.
-  #[[redirects]]
-  #  from = "/*"
-  #  to = "/index.html"
-  #  status = 200
+# Install Rust before the build
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
 
-  ## (optional) Settings for Netlify Dev
-  ## https://github.com/netlify/cli/blob/main/docs/netlify-dev.md#project-detection
-  #[dev]
-  #  command = "yarn start" # Command to start your dev server
-  #  port = 3000 # Port that the dev server will be listening on
-  #  publish = "dist" # Folder with the static content for _redirect file
+[[plugins]]
+  package = "./netlify/plugins/wasm-pack-plugin"
+  [plugins.inputs]
+    wasmDir = "./gpx-file-processor-wasm"
+    targetDir = "../static/wasm"
+    target = "web"
 
-  ## more info on configuring this file: https://ntl.fyi/file-based-build-config
+# Add environment variables
+[build.environment]
+  RUSTUP_HOME = "/opt/buildhome/.rustup"
+  CARGO_HOME = "/opt/buildhome/.cargo"
+  PATH = "/opt/buildhome/.cargo/bin:$PATH"
+
+# Override build command to skip the wasm step since the plugin will handle it
+[build.commands]
+  build = "npx vite build"
