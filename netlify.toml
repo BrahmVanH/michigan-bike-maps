@@ -19,6 +19,8 @@
   RUSTUP_HOME = "/opt/buildhome/.rustup"
   CARGO_HOME = "/opt/buildhome/.cargo"
   PATH = "/opt/buildhome/.cargo/bin:$PATH"
+  NODE_VERSION="18"
+  NETLIFY_USE_JAMMY = "true" 
 
 # Override build command to skip the wasm step since the plugin will handle it
 [build.commands]
