@@ -1,22 +1,7 @@
 [build]
-  command = "npm run build"
+  command = "bash build-netlify.sh"
   publish = "build"
 
 [build.environment]
   NODE_VERSION = "20"
-
-[context.production]
-  command = """
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --target wasm32-unknown-unknown &&
-    source ~/.cargo/env &&
-    curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh &&
-    npm run build
-  """
-
-[context.deploy-preview]
-  command = """
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --target wasm32-unknown-unknown &&
-    source ~/.cargo/env &&
-    curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh &&
-    npm run build
-  """
+  RUST_VERSION = "1.75.0"
