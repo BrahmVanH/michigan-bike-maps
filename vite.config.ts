@@ -17,5 +17,18 @@ export default defineConfig({
 				}
 			]
 		}
-	}), wasmPack("./gpx-file-processor-wasm")]
+	}), wasmPack("./gpx-file-processor-wasm/")],
+	server: {
+		hmr: {
+			overlay: true
+		},
+		fs: {
+			strict: false
+		}
+	},
+	resolve: {
+		alias: {
+			'@wasm': '/wasm'
+		}
+	}
 });

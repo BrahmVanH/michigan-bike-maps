@@ -29,7 +29,7 @@ export const actions = {
       const arrayBuffer = await gpxFile.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      const fileName = uuidv4();
+      const fileName = uuidv4() + '.gpx.gz';
 
       // Upload the file to S3
       const uploadResult = await uploadGPXFile(fileName, fileBuffer);

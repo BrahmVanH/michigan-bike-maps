@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync, unlinkSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 
-const dirName = "./wasm-test/pkg/"; // change this to match your Rust library's name
+const dirName = "./static/wasm/";
 
 const content = readFileSync(dirName + "package.json");
 

@@ -3,6 +3,9 @@ use std::io::Write;
 use flate2::{ write::GzEncoder, Compression };
 use wasm_bindgen::JsValue;
 
+
+
+
 pub fn compress_gpx(data: &str) -> Result<Vec<u8>, JsValue> {
     let mut encoder = GzEncoder::new(Vec::new(), Compression::new(6));
 
@@ -14,6 +17,8 @@ pub fn compress_gpx(data: &str) -> Result<Vec<u8>, JsValue> {
 
     encoder.finish().map_err(|e| JsValue::from_str(&format!("Compression error: {}", e)))
 }
+
+
 
 fn remove_excess_whitespace(xml: &str) -> String {
     // Simple whitespace cleanup - you might want more sophisticated XML minification

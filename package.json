@@ -13,7 +13,7 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"modulize-wasm": "node ./gpx-file-processor-wasm/modulize.js",
-		"wasm": "wasm-pack build ./gpx-file-processor-wasm--target web && npm run modulize-wasm"
+"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm"
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.8.1",
@@ -30,8 +30,6 @@
 		"clsx": "^2.1.1",
 		"formsnap": "^2.0.1",
 		"prettier": "^3.4.2",
-		"prettier-plugin-svelte": "^3.3.3",
-		"prettier-plugin-tailwindcss": "^0.6.11",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"sveltekit-superforms": "^2.25.0",
@@ -47,6 +45,8 @@
 		"@aws-sdk/s3-request-presigner": "^3.821.0",
 		"@poppanator/sveltekit-svg": "^5.0.1",
 		"@wasm-tool/rollup-plugin-rust": "^3.0.4",
+		"prettier-plugin-svelte": "^3.3.3",
+		"prettier-plugin-tailwindcss": "^0.6.11",
 		"uuid": "^11.1.0",
 		"vite-plugin-wasm-pack": "^0.1.12"
 	}

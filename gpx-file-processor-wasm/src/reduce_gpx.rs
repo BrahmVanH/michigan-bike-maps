@@ -3,14 +3,14 @@ use wasm_bindgen::JsValue;
 
 use crate::{ parse_gpx_from_string, SmlrGpx, SmlrTrack, SmlrTrackPoint, SmlrTrackSegment };
 
-pub fn reduce_gpx_size(gpx_string: &str) -> Result<SmlrGpx, JsValue> {
+pub fn reduce_gpx_size(gpx_string: &str) -> Result<String, JsValue> {
     let gpx: Gpx = parse_gpx_from_string(gpx_string).map_err(|e|
         JsValue::from_str(&format!("Error reducing gpx file: {}", e))
     )?;
 
     let smlr_gpx: SmlrGpx;
 
-    let mut sml_trk: Vec<SmlrTrack> = Vec::new();
+    let mut smlr_trk: Vec<SmlrTrack> = Vec::new();
     for (track_index, track) in gpx.tracks.iter().enumerate() {
         if let Some(name) = &track.name {
             println!("Track name: {}", name);
@@ -27,10 +27,10 @@ pub fn reduce_gpx_size(gpx_string: &str) -> Result<SmlrGpx, JsValue> {
             let smlr_seg: SmlrTrackSegment;
 
             let mut smlr_trk_pts: Vec<SmlrTrackPoint> = Vec::new();
-            for track_point in &seg.trkpt {
-                let rounded_lat = (track_point.lat * 100.0).round() / 100.0;
-                let rounded_lon = (track_point.lon * 100.0).round() / 100.0;
-                let rounded_ele = match track_point.ele {
+            for track_point in &seg.points {
+                let rounded_lat = (track_point.point().y() * 100.0).round() / 100.0;
+                let rounded_lon = (track_point.point().x() * 100.0).round() / 100.0;
+                let rounded_ele = match track_point.elevation {
                     Some(ele) => (ele * 100.0).round() / 100.0,
                     None => 0.0,
                 };
@@ -65,4 +65,8 @@ pub fn reduce_gpx_size(gpx_string: &str) -> Result<SmlrGpx, JsValue> {
     smlr_gpx = SmlrGpx {
         trk: smlr_trk,
     };
+
+    let smlr_gpx_str = serde_json::to_string(&smlr_gpx).map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))?;
+
+    Ok(smlr_gpx_str)
 }

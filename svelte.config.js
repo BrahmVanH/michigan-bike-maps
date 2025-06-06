@@ -3,9 +3,13 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const config = {
 	preprocess: vitePreprocess(),
-	kit: {alias: {
-		"@/*": "./src/lib/*",
-	}, adapter: adapter() }
+	kit: {
+		alias: {
+			"@/*": "./src/lib/*",
+			'@wasm': './static/wasm'
+
+		}, adapter: adapter()
+	}
 };
 
 export default config;

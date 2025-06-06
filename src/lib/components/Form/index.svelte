@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { loadWasmModule, processGpx } from '$lib/wasm-loader';
+	import init, { process_gpx_with_analytics } from '@wasm';
+	// import init, { process_gpx_with_analytics } from '../../../../static/wasm/gpx_file_processor_wasm/';
 	import { Input } from '$lib/components/ui/input';
 	import { FormField, FormLabel, FormDescription } from '$lib/components/ui/form/';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
@@ -6,6 +9,7 @@
 	import FormButton from '$lib/components/ui/form/form-button.svelte';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { formSchema, type FormSchema } from './schema';
+	import { onMount } from 'svelte';
 
 	// Svelte 5 props
 	const { data }: { data: SuperValidated<Infer<FormSchema>> } = $props();
@@ -18,6 +22,16 @@
 	let fileInputRef = $state<HTMLInputElement | null>(null);
 	let uploadSuccess = $state(false);
 	let uploadMessage = $state('');
+	let wasmLoaded = $state(false);
+
+	onMount(async () => {
+		try {
+			await loadWasmModule();
+			wasmLoaded = true;
+		} catch (err) {
+			console.error('Failed to load WASM module:', err);
+		}
+	});
 
 	const form = superForm(data, {
 		validators: zodClient(formSchema),
@@ -64,32 +78,72 @@
 		processFiles(input.files);
 	}
 
-	function processFiles(files: FileList | null) {
-		if (files && files.length > 0) {
-			console.log('files: ', files);
-			const file = files[0];
-			selectedFileName = file.name;
+	async function processFiles(files: FileList | null) {
+		if (!files || files.length === 0) {
+			selectedFileName = '';
+			isValid = true;
+			return;
+		}
 
-			// Validate file type
-			isValid = file.name.endsWith('.gpx');
+		// Set the selected filename immediately for UI feedback
+		selectedFileName = files[0].name;
 
-			// Copy the file to the actual form input - with null checks
+		// Validate file type first
+		isValid = selectedFileName.toLowerCase().endsWith('.gpx');
+		if (!isValid) return;
+
+		if (wasmLoaded) {
+			try {
+				console.log('Processing file with WASM:', files[0].name);
+
+				// Show some processing state if needed
+				// isProcessing = true;
+
+				const fileText = await files[0].text();
+				const compressedFileDataArray = await process_gpx_with_analytics(fileText);
+
+				// Create a new file from the processed data
+				const blob = new Blob([compressedFileDataArray], { type: 'application/octet-stream' });
+				const compressedFile = new File([blob], files[0].name.replace('.gpx', '.gpx.gz'), {
+					type: 'application/gzip'
+				});
+
+				console.log('File processed successfully:', compressedFile.name);
+
+				// Copy the processed file to the actual form input
+				const formInput = document.getElementById('gpxFile') as HTMLInputElement | null;
+				if (formInput && typeof DataTransfer !== 'undefined') {
+					try {
+						const dataTransfer = new DataTransfer();
+						dataTransfer.items.add(compressedFile);
+						formInput.files = dataTransfer.files;
+
+						// Make sure selectedFileName stays consistent
+						selectedFileName = compressedFile.name;
+					} catch (error) {
+						console.error('Error setting file input:', error);
+					}
+				}
+			} catch (error) {
+				console.error('Error processing file with WASM:', error);
+				uploadMessage = 'Error processing GPX file';
+				uploadSuccess = false;
+			} finally {
+				// isProcessing = false;
+			}
+		} else {
+			console.log('WASM not loaded, using original file');
+
 			const formInput = document.getElementById('gpxFile') as HTMLInputElement | null;
 			if (formInput && typeof DataTransfer !== 'undefined') {
 				try {
-					// Create a DataTransfer object
 					const dataTransfer = new DataTransfer();
-					// Add the selected file
-					dataTransfer.items.add(file);
-					// Set the files property
+					dataTransfer.items.add(files[0]);
 					formInput.files = dataTransfer.files;
 				} catch (error) {
 					console.error('Error setting file input:', error);
 				}
 			}
-		} else {
-			selectedFileName = '';
-			isValid = true;
 		}
 	}
 
