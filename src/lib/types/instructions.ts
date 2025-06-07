@@ -1,5 +1,17 @@
+import type { s3Obj } from "."
+
 export interface Config {
-  imgs: {
-    'strava-desktop': string[];
-  }
+  sources: Source[]
+}
+
+type Source = {
+  id: string,
+  title: string,
+  downloadSteps: DownloadStep[],
+  
+}
+
+type DownloadStep = {
+  imgKey?: string,
+  text: string
 }

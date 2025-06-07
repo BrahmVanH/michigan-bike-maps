@@ -18,6 +18,7 @@
 		"modulize-wasm:netlify": "node ./gpx-file-processor-wasm/modulize.js netlify"
 	},
 	"devDependencies": {
+		"@iconify/svelte": "^5.0.0",
 		"@internationalized/date": "^3.8.1",
 		"@lucide/svelte": "^0.511.0",
 		"@sveltejs/adapter-netlify": "^5.0.0",
