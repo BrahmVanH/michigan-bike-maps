@@ -10,7 +10,13 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
-		"module": "es2022"
+		"module": "es2022",
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/lib/*"],
+			"@types": ["./types"],
+      "@types/*": ["./types/*"],
+		},
 	}
 	
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias

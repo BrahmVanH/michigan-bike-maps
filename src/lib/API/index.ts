@@ -17,7 +17,7 @@ import {
   AWS_REGION_PROD,
   AWS_ACCESS_KEY_ID_PROD,
   AWS_SECRET_ACCESS_KEY_PROD,
-  AWS_S3_BUCKET_PROD
+  AWS_S3_BUCKET_GPX_PROD
 } from '$env/static/private';
 
 /**
@@ -73,7 +73,7 @@ export async function uploadGPXFile(fileName: string, fileBuffer: Buffer) {
 
   // Create an S3 PutObject command with appropriate parameters
   const command = new PutObjectCommand({
-    Bucket: AWS_S3_BUCKET_PROD,           // Target S3 bucket
+    Bucket: AWS_S3_BUCKET_GPX_PROD,           // Target S3 bucket
     Key,                                  // Object key (file path)
     Body: fileBuffer,                     // File content
     ContentType: 'application/gpx+xml',   // MIME type for GPX files
@@ -102,15 +102,22 @@ export async function uploadGPXFile(fileName: string, fileBuffer: Buffer) {
  * 
  * @note There appears to be an inconsistency between the bucket used here
  * (process.env.AWS_S3_BUCKET) and the one used in uploadGPXFile
- * (AWS_S3_BUCKET_PROD). This should be reviewed to ensure consistency.
+ * (AWS_S3_BUCKET_GPX_PROD). This should be reviewed to ensure consistency.
  */
 export async function getGPXDownloadUrl(fileName: string): Promise<string> {
   // Create an S3 GetObject command
   const command = new GetObjectCommand({
-    Bucket: process.env.AWS_S3_BUCKET,    // Target S3 bucket (note: may differ from upload bucket)
+    Bucket: process.env.AWS_S3_BUCKET_GPX_PROD,    // Target S3 bucket (note: may differ from upload bucket)
     Key: `gpx/${fileName}`,               // Object key including prefix
   });
 
   // Generate a pre-signed URL that expires in 1 hour (3600 seconds)
   return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+}
+
+
+export async function getInstructionalImgs() {
+  const command = new GetObjectCommand({
+    Bucket: pro
+  })
 }

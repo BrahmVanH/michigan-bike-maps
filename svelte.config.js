@@ -6,6 +6,7 @@ const config = {
 	kit: {
 		alias: {
 			"@/*": "./src/lib/*",
+			"@types/*": './types/*',
 			'@wasm': './static/wasm'
 
 		}, adapter: adapter()

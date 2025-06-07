@@ -35,6 +35,7 @@ export default defineConfig({
 		alias: {
 			'@wasm': '/wasm',
 			'@': './src',
+			'@types': './types'
 		}
 	},
 	optimizeDeps: {
