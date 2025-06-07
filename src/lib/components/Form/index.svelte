@@ -158,7 +158,7 @@
 			try {
 				// Process the file using WebAssembly for compression
 				const fileText = await file.text();
-				const compressedFileDataArray = reduceCompressGpx(fileText);
+				const compressedFileDataArray = await reduceCompressGpx(fileText);
 
 				// Create a new file from the compressed data
 				const blob = new Blob([compressedFileDataArray], { type: 'application/octet-stream' });
