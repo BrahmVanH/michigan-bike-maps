@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" >
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 
@@ -90,7 +90,7 @@
 
 <svelte:head>
 	<!-- Initialize dataLayer first -->
-	<script>
+	<script nonce="%sveltekit.nonce%">
 		window.dataLayer = window.dataLayer || [];
 		function gtag() {
 			dataLayer.push(arguments);
@@ -112,10 +112,10 @@
 	</script>
 
 	<!-- Load Google Analytics script -->
-	<script async defer src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+	<script async defer src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} nonce="%sveltekit.nonce%"></script>
 
 	<!-- Configure Google Analytics after script loads -->
-	<script>
+	<script nonce="%sveltekit.nonce%">
 		// Wait for the gtag script to load, then configure
 		window.addEventListener('load', function () {
 			if (window.gtag) {
