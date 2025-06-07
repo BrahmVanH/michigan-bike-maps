@@ -1,4 +1,3 @@
-
 <script lang="ts">
 	/**
 	 * GPX File Upload Form Component
@@ -25,6 +24,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { formSchema, type FormSchema } from './schema';
 	import WasmLoader from '../WasmLoader.svelte';
+	import DataPolicy from '../DataPolicy.svelte';
 
 	/**
 	 * Form data passed from the server-side load function
@@ -41,8 +41,11 @@
 	let uploadSuccess = $state(false); // Whether the upload was successful
 	let uploadMessage = $state(''); // Message to display to the user
 	let wasmLoaded = $state(false); // Whether the WebAssembly module has loaded
+	let showDataDialog = $state(false);
 
-
+	function openDataDialog(): void {
+		showDataDialog = true;
+	}
 
 	/**
 	 * Initialize the form with validation and lifecycle hooks
@@ -57,7 +60,15 @@
 			isSubmitting = false;
 
 			if (result.type === 'success') {
-				// ...existing success code
+				// Set success state
+				uploadSuccess = true;
+				uploadMessage = 'Thank you! Your GPX route was successfully uploaded.';
+
+				// Clear file input
+				selectedFileName = '';
+				if (fileInputRef) {
+					fileInputRef.value = '';
+				}
 			} else if (result.type === 'failure') {
 				uploadSuccess = false;
 
@@ -248,11 +259,17 @@
 Main form container with backdrop blur effect
 Uses a semi-transparent background to maintain contrast against map backgrounds
 -->
-<WasmLoader bind:loaded={wasmLoaded} on:load={({ detail }) => {
-  if (!detail.success) {
-    uploadMessage = 'WebAssembly module failed to load. Some features may be limited.';
-  }
-}} />
+<WasmLoader
+	bind:loaded={wasmLoaded}
+	on:load={({ detail }) => {
+		if (!detail.success) {
+			uploadMessage = 'WebAssembly module failed to load. Some features may be limited.';
+		}
+	}}
+/>
+
+<DataPolicy bind:open={showDataDialog} />
+
 <div
 	class="my-auto h-min w-full max-w-md rounded-lg border border-orange-700/30 bg-black/30 p-6 shadow-xl backdrop-blur-sm"
 >
@@ -402,7 +419,7 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 			{/if}
 
 			<!-- Submit button with loading state -->
-			<div class="mt-6 flex items-center justify-end">
+			<div class="mt-6 flex flex-col items-center justify-end space-y-2">
 				<FormButton
 					class="w-full rounded-md border border-orange-800 bg-orange-800/60 px-4 py-2 text-sm font-medium text-white 
 									shadow-md transition-all duration-200 ease-in-out hover:bg-orange-700/80 focus:ring-2
@@ -419,6 +436,16 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 						Submit
 					{/if}
 				</FormButton>
+				<div class="flex items-center gap-2 text-sm">
+					<span class="text-gray-400"> By uploading, you agree to our </span>
+					<button
+						type="button"
+						class="text-orange-400 underline hover:text-orange-300 focus:ring-2 focus:ring-orange-500/50 focus:outline-none"
+						onclick={openDataDialog}
+					>
+						data usage policy
+					</button>
+				</div>
 			</div>
 		</form>
 	{/if}

@@ -99,7 +99,6 @@ pub struct BoundingBox {
 ///
 /// @param gpx_string - The GPX content to validate
 /// @returns Whether the input is valid GPX data
-#[wasm_bindgen]
 pub fn validate_gpx(gpx_string: &str) -> bool {
     // Check for reasonable size
     if gpx_string.len() > 50_000_000 { // 50MB max
@@ -141,6 +140,8 @@ pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
     // Initialize timing tracking for performance analysis
     let mut timings = HashMap::new();
     let start_time = js_sys::Date::now();
+
+    
     
     // Parse the original GPX file
     let original_gpx = match parse_gpx_from_string(gpx_string) {
@@ -365,6 +366,11 @@ pub fn process_gpx_with_analytics(gpx_string: &str) -> Result<JsValue, JsValue> 
 /// * `Result<Vec<u8>, JsValue>` - The compressed binary data or an error
 #[wasm_bindgen]
 pub fn reduce_compress_gpx(gpx_string: &str) -> Result<Vec<u8>, JsValue> {
+    let is_valid = validate_gpx(&gpx_string);
+
+    if !is_valid {
+        return Err(JsValue::from_str(&format!("Incorrect file format")));
+    }
     // First reduce the GPX file size by simplifying track points
     let smlr_gpx = reduce_gpx_size(gpx_string)?;
 

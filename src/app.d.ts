@@ -11,7 +11,9 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+	interface Window {
+		dataLayer: any[];
+	}
 }
 
 export { };
-

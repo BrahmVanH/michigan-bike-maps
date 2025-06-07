@@ -13,28 +13,32 @@ export const handle: Handle = async ({ event, resolve }) => {
   });
 
   const allowedScriptHashes = [
-    'sha256-A0KtUzZjqbpeFRPxgjqKWTOxwZkt5Hj8I90vY6iPkLk=',
-    'sha256-DuGgxVdcpnS3W9cW3lYUmr9COOM7cGrDBaDyrTNauY8=',
-    'sha256-ArZS4bKt7vlTrUuJLICVouLGhK5bLkN3IPuCEHF9Ry0=',
-    'sha256-ZdcyT9UHm2RBYyGqChEN+cEuscyc3zkCR7i1APqE6g8=',
-    'sha256-kbtFhEcdr0jFD6Mza8SI5Qqj3pBq4XOVTZwWqY6FDnM=',
-    'sha256-CmBOr6DT+IJnxskHTVK4bLDpD9ifMThrsDuOSuhl4lY=',
-    'sha256-CqfYMUIFL74fhQmBN6Xf/7FmcOjZZBPj71joiZ3skNo=',
-    'sha256-jMqCwIPbXjPJpVVnlA93Bz+TWoc5u5HMBFKz24AlDs4=',
-    'sha256-3xxwmg6WMOgNc6THaHxKF300s5W8U6KMjMvdkBZByrg=',
-    'sha256-8rLjiN3x5NJWIZKtkCCTqATQdX3qTnUS8oZPVR9rP4E=',
-    'sha256-meqdSpNrglVbA6w847PYQV3GyXezaw1flzX4aNRVZX8=',
-    'sha256-HHtagRqtrBqhKxET/abGldrDb61sdVoJxHbDOWhzIy4='
+    `'sha256-A0KtUzZjqbpeFRPxgjqKWTOxwZkt5Hj8I90vY6iPkLk='`,
+    `'sha256-DuGgxVdcpnS3W9cW3lYUmr9COOM7cGrDBaDyrTNauY8='`,
+    `'sha256-ArZS4bKt7vlTrUuJLICVouLGhK5bLkN3IPuCEHF9Ry0='`,
+    `'sha256-ZdcyT9UHm2RBYyGqChEN+cEuscyc3zkCR7i1APqE6g8='`,
+    `'sha256-kbtFhEcdr0jFD6Mza8SI5Qqj3pBq4XOVTZwWqY6FDnM='`,
+    `'sha256-CmBOr6DT+IJnxskHTVK4bLDpD9ifMThrsDuOSuhl4lY='`,
+    `'sha256-CqfYMUIFL74fhQmBN6Xf/7FmcOjZZBPj71joiZ3skNo='`,
+    `'sha256-jMqCwIPbXjPJpVVnlA93Bz+TWoc5u5HMBFKz24AlDs4='`,
+    `'sha256-3xxwmg6WMOgNc6THaHxKF300s5W8U6KMjMvdkBZByrg='`,
+    `'sha256-8rLjiN3x5NJWIZKtkCCTqATQdX3qTnUS8oZPVR9rP4E='`,
+    `'sha256-meqdSpNrglVbA6w847PYQV3GyXezaw1flzX4aNRVZX8='`,
+    `'sha256-HHtagRqtrBqhKxET/abGldrDb61sdVoJxHbDOWhzIy4='`,
+    `'sha256-uw1rPornAx9j6EbYyoq0QSaCaF9Da0jJsEtd4Zp8d4M='`,
+    `'sha256-ZMajLaXDMA7M2y+wb+difNSbu49hGP+XtM6MwPc0scY='`,
+    `'sha256-IKiWjhBtQOXPZs4J7bzTB6dIlajtcGQc6iMznYQ7g1E='`,
+    `'sha256-B41PUWl4S8gI7ikZVh9TG7g55ya7GAebzqmBFzvGpi8='`
 
   ]
-
   const cspDirectives = [
     "default-src 'self'",
-    `script-src 'self' 'wasm-unsafe-eval' ${allowedScriptHashes.join(' ')} 'nonce-${nonce}'`,
+    `script-src 'self' 'wasm-unsafe-eval' ${allowedScriptHashes.join(' ')} 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`,
     "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' blob:",
-    "img-src 'self' data:",
-    "worker-src 'self' blob:"
+    "connect-src 'self' blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://region1.google-analytics.com",
+    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com",
+    "worker-src 'self' blob:",
+    "child-src 'self' blob:"
   ];
 
   response.headers.set(

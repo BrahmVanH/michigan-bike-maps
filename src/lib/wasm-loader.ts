@@ -10,7 +10,7 @@ export async function loadWasmModule() {
   if (isLoading) {
     return new Promise(resolve => {
       const checkInterval = setInterval(() => {
-        if (wasmModule) {
+        if (wasmModule || !isLoading) {
           clearInterval(checkInterval);
           resolve(wasmModule);
         }
@@ -21,31 +21,69 @@ export async function loadWasmModule() {
   isLoading = true;
 
   try {
+    // Try the vite-plugin-wasm-pack import first
+    console.log('Loading WASM module...');
 
-    try {
-      const importedModule = await import('@wasm/gpx_file_processor_wasm');
-      wasmModule = importedModule;
-      return wasmModule;
-    } catch (importError) {
+    // This should work with your vite.config.ts setup
+    const wasmPkg = await import('@wasm/gpx_file_processor_wasm.js');
 
-      console.log('Dynamic import failed, trying manual WebAssembly instantiation...', importError);
-
-      const wasmUrl = '/wasm/gpx_file_processor_wasm_bg.wasm';
-      const response = await fetch(wasmUrl);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch WASM file: ${response.status} ${response.statusText}`);
-      }
-
-      const wasmBytes = await response.arrayBuffer();
-      const wasmModule = await WebAssembly.instantiate(wasmBytes, {});
-
-      return wasmModule.instance.exports;
+    // Initialize the WASM module
+    if (typeof wasmPkg.default === 'function') {
+      await wasmPkg.default(); // Initialize the WASM
     }
+
+    wasmModule = wasmPkg;
+    console.log('WASM module loaded successfully');
+    return wasmModule;
+
   } catch (error) {
     console.error('Failed to load WASM module:', error);
-    isLoading = false;
-    throw error;
+
+    // Fallback: try to load from static files with proper CSP nonce
+    try {
+      console.log('Trying fallback method...');
+
+      // Create script element with nonce for CSP compliance
+      const scriptElement = document.createElement('script');
+      scriptElement.type = 'module';
+
+      // Get the CSP nonce from the page if available
+      const nonceElement = document.querySelector('script[nonce]');
+      if (nonceElement) {
+        scriptElement.nonce = nonceElement.getAttribute('nonce') || '';
+      }
+
+      // Load the WASM module script
+      scriptElement.src = '/wasm/gpx_file_processor_wasm.js';
+
+      return new Promise((resolve, reject) => {
+        scriptElement.onload = async () => {
+          try {
+            // Access the globally loaded module
+            const globalWasm = (window as any).wasm_bindgen;
+            if (globalWasm) {
+              await globalWasm('/wasm/gpx_file_processor_wasm_bg.wasm');
+              wasmModule = globalWasm;
+              resolve(wasmModule);
+            } else {
+              reject(new Error('WASM module not found in global scope'));
+            }
+          } catch (err) {
+            reject(err);
+          }
+        };
+
+        scriptElement.onerror = () => {
+          reject(new Error('Failed to load WASM script'));
+        };
+
+        document.head.appendChild(scriptElement);
+      });
+
+    } catch (fallbackError) {
+      console.error('Fallback method also failed:', fallbackError);
+      throw fallbackError;
+    }
   } finally {
     isLoading = false;
   }
@@ -63,7 +101,11 @@ export async function processGpx(gpxString: string) {
   if (!module) throw new Error('WASM module not loaded');
 
   try {
-    return module.process_gpx_with_analytics(gpxString);
+    if (typeof module.process_gpx_with_analytics === 'function') {
+      return module.process_gpx_with_analytics(gpxString);
+    } else {
+      throw new Error('process_gpx_with_analytics function not found in WASM module');
+    }
   } catch (error) {
     console.error('Error processing GPX data:', error);
     throw new Error('Failed to process GPX data. Please check file format and try again.');
@@ -80,9 +122,14 @@ export async function reduceCompressGpx(gpxString: string) {
   if (!module) throw new Error('WASM module not loaded');
 
   try {
-    return module.reduce_compress_gpx(gpxString);
+    if (typeof module.reduce_compress_gpx === 'function') {
+      return module.reduce_compress_gpx(gpxString);
+    } else {
+      throw new Error('reduce_compress_gpx function not found in WASM module');
+    }
   } catch (error) {
     console.error('Error compressing GPX data:', error);
     throw new Error('Failed to compress GPX data. Please check file format and try again.');
   }
 }
+

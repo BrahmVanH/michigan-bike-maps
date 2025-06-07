@@ -4,9 +4,13 @@ import { enhancedImages } from '@sveltejs/enhanced-img';
 import svg from '@poppanator/sveltekit-svg';
 import wasmPack from 'vite-plugin-wasm-pack';
 import { defineConfig } from 'vite';
+import { partytownVite } from '@qwik.dev/partytown/utils';
+import path from 'path';
 
 export default defineConfig({
-	plugins: [enhancedImages(), tailwindcss(), sveltekit(), svg({
+	plugins: [enhancedImages(), tailwindcss(), sveltekit(), partytownVite({
+		dest: path.join(__dirname, "static", "~partytown")
+	}), svg({
 		includePaths: ['./src/lib/images/'],
 		svgoOptions: {
 			multipass: true,
@@ -23,7 +27,8 @@ export default defineConfig({
 			overlay: true
 		},
 		fs: {
-			strict: false
+			strict: false,
+			allow: ['..']
 		}
 	},
 	resolve: {
@@ -31,5 +36,8 @@ export default defineConfig({
 			'@wasm': '/wasm',
 			'@': './src',
 		}
+	},
+	optimizeDeps: {
+		exclude: ['@wasm/gpx_file_processor_wasm']
 	}
 });

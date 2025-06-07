@@ -6,11 +6,7 @@ import { uploadGPXFile } from '@/API';
 import { v4 as uuidv4 } from 'uuid';
 import { checkRateLimit } from '@/rateLimiter';
 
-function isValidGpxFile(buffer: Buffer): boolean {
-  // Check for XML header and GPX tag
-  const header = buffer.toString('utf8', 0, Math.min(buffer.length, 200));
-  return header.includes('<?xml') && header.includes('<gpx');
-}
+
 
 export const load = (async () => {
   const form = await superValidate(zod(formSchema));
@@ -19,7 +15,7 @@ export const load = (async () => {
 
 export const actions = {
   default: async (event) => {
-    
+
     await checkRateLimit(event);
 
 
@@ -35,6 +31,7 @@ export const actions = {
     const MAX_SIZE_MB = 10;
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
     if (gpxFile.size > MAX_SIZE_BYTES) {
+      formData.delete("gpxFile")
       const form = await superValidate(formData, zod(formSchema));
       form.errors.gpxFile = [`File exceeds maximum size of ${MAX_SIZE_MB}MB`];
       return fail(400, { form });
@@ -44,11 +41,7 @@ export const actions = {
       const arrayBuffer = await gpxFile.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-      if (!isValidGpxFile(fileBuffer)) {
-        const form = await superValidate(formData, zod(formSchema));
-        form.errors.gpxFile = ['Invalid GPX file content'];
-        return fail(400, { form });
-      }
+
 
       const fileName = uuidv4() + '.gpx.gz';
 
