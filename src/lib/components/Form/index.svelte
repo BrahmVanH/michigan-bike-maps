@@ -24,7 +24,6 @@
 	import FormButton from '$lib/components/ui/form/form-button.svelte';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { formSchema, type FormSchema } from './schema';
-	import { onMount } from 'svelte';
 	import WasmLoader from '../WasmLoader.svelte';
 
 	/**
@@ -43,18 +42,7 @@
 	let uploadMessage = $state(''); // Message to display to the user
 	let wasmLoaded = $state(false); // Whether the WebAssembly module has loaded
 
-	// /**
-	//  * Initialize the WebAssembly module on component mount
-	//  * This ensures the compression functionality is available when needed
-	//  */
-	// onMount(async () => {
-	// 	try {
-	// 		await loadWasmModule();
-	// 		wasmLoaded = true;
-	// 	} catch (err) {
-	// 		console.error('Failed to load WASM module:', err);
-	// 	}
-	// });
+
 
 	/**
 	 * Initialize the form with validation and lifecycle hooks
