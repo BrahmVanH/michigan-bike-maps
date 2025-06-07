@@ -14,7 +14,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   response.headers.set(
     'Content-Security-Policy',
-    `default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-A0KtUzZjqbpeFRPxgjqKWTOxwZkt5Hj8I90vY6iPkLk=' 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; connect-src 'self' blob:; img-src 'self' data:; worker-src 'self' blob:;`
+    `default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-A0KtUzZjqbpeFRPxgjqKWTOxwZkt5Hj8I90vY6iPkLk=' 'sha256-DuGgxVdcpnS3W9cW3lYUmr9COOM7cGrDBaDyrTNauY8=' 'nonce-${nonce}'; style-src 'self' 'unsafe-inline'; connect-src 'self' blob:; img-src 'self' data:; worker-src 'self' blob:;`
   );
 
   response.headers.set('X-Content-Type-Options', 'nosniff');
