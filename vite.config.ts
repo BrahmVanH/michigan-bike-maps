@@ -28,7 +28,8 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			'@wasm': '/wasm'
+			'@wasm': '/wasm',
+			'@': './src',
 		}
 	}
 });

@@ -9,7 +9,7 @@ use gpx::Gpx;                  // GPX parsing and representation
 use wasm_bindgen::JsValue;     // WebAssembly <-> JavaScript interop
 
 // Import custom types from the parent module
-use crate::{ parse_gpx_from_string, SmlrGpx, SmlrTrack, SmlrTrackPoint, SmlrTrackSegment };
+use crate::{ count_points, parse_gpx_from_string, SmlrGpx, SmlrTrack, SmlrTrackPoint, SmlrTrackSegment };
 
 /// Reduces the size of a GPX file by simplifying its structure and precision.
 ///
@@ -33,10 +33,29 @@ use crate::{ parse_gpx_from_string, SmlrGpx, SmlrTrack, SmlrTrackPoint, SmlrTrac
 /// * Returns a JavaScript error value if GPX parsing fails
 /// * Returns a JavaScript error value if JSON serialization fails
 pub fn reduce_gpx_size(gpx_string: &str) -> Result<String, JsValue> {
+      
+    // Check input size
+    if gpx_string.len() > 50_000_000 { // 50MB max
+        return Err(JsValue::from_str("GPX file too large (max 50MB)"));
+    }
+    
+    // Limit the number of points to process
+    let max_points = 100000; 
+    
     // Parse the original GPX XML string into a structured Gpx object
     let gpx: Gpx = parse_gpx_from_string(gpx_string).map_err(|e|
         JsValue::from_str(&format!("Error reducing gpx file: {}", e))
     )?;
+
+       // Count points to ensure we don't process overly complex files
+       let point_count = count_points(&gpx);
+       if point_count > max_points {
+           return Err(JsValue::from_str(
+               &format!("GPX file contains too many points ({} > {} max)", 
+                       point_count, max_points)
+           ));
+       }
+       
 
     // Declare the simplified GPX structure to be populated
     let smlr_gpx: SmlrGpx;

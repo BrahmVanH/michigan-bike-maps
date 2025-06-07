@@ -1,3 +1,4 @@
+
 <script lang="ts">
 	/**
 	 * GPX File Upload Form Component
@@ -14,8 +15,7 @@
 	 */
 
 	// Import WebAssembly loader and compression function
-	import { loadWasmModule } from '$lib/wasm-loader';
-	import { reduce_compress_gpx } from '@wasm';
+	import { loadWasmModule, reduceCompressGpx } from '$lib/wasm-loader';
 
 	// Import UI components and form handling utilities
 	import { FormField } from '$lib/components/ui/form/';
@@ -25,6 +25,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { formSchema, type FormSchema } from './schema';
 	import { onMount } from 'svelte';
+	import WasmLoader from '../WasmLoader.svelte';
 
 	/**
 	 * Form data passed from the server-side load function
@@ -42,18 +43,18 @@
 	let uploadMessage = $state(''); // Message to display to the user
 	let wasmLoaded = $state(false); // Whether the WebAssembly module has loaded
 
-	/**
-	 * Initialize the WebAssembly module on component mount
-	 * This ensures the compression functionality is available when needed
-	 */
-	onMount(async () => {
-		try {
-			await loadWasmModule();
-			wasmLoaded = true;
-		} catch (err) {
-			console.error('Failed to load WASM module:', err);
-		}
-	});
+	// /**
+	//  * Initialize the WebAssembly module on component mount
+	//  * This ensures the compression functionality is available when needed
+	//  */
+	// onMount(async () => {
+	// 	try {
+	// 		await loadWasmModule();
+	// 		wasmLoaded = true;
+	// 	} catch (err) {
+	// 		console.error('Failed to load WASM module:', err);
+	// 	}
+	// });
 
 	/**
 	 * Initialize the form with validation and lifecycle hooks
@@ -67,19 +68,23 @@
 		onResult: ({ result }) => {
 			isSubmitting = false;
 
-			// Handle different result types with appropriate user feedback
 			if (result.type === 'success') {
-				uploadSuccess = true;
-				uploadMessage = 'Thank you! Your GPX route was successfully uploaded.';
-
-				// Reset form state
-				selectedFileName = '';
-				if (fileInputRef) {
-					fileInputRef.value = '';
-				}
-			} else if (result.type === 'failure' && result.data?.uploadResult?.message) {
+				// ...existing success code
+			} else if (result.type === 'failure') {
 				uploadSuccess = false;
-				uploadMessage = result.data.uploadResult.message;
+
+				// Check for rate limiting errors (status code 429)
+				if (result.status === 429) {
+					uploadMessage = 'You have made too many upload attempts. Please try again later.';
+				}
+				// Check for custom error message from server
+				else if (result.data?.uploadResult?.message) {
+					uploadMessage = result.data.uploadResult.message;
+				}
+				// Default error message
+				else {
+					uploadMessage = 'There was an error uploading your file.';
+				}
 			} else {
 				uploadSuccess = false;
 				uploadMessage = 'There was an error uploading your file.';
@@ -122,21 +127,42 @@
 			return;
 		}
 
-		selectedFileName = files[0].name;
+		const file = files[0];
+
+		selectedFileName = file.name;
 
 		// Validate file extension is .gpx
 		isValid = selectedFileName.toLowerCase().endsWith('.gpx');
+
+		// Check the file's content type or signature
+		try {
+			const firstBytes = await readFirstBytes(file, 100);
+			const fileContent = new TextDecoder().decode(firstBytes);
+
+			// Basic check for XML structure and GPX content
+			if (!fileContent.includes('<?xml') || !fileContent.includes('<gpx')) {
+				isValid = false;
+				uploadMessage = 'Invalid GPX file content';
+				return;
+			}
+		} catch (error) {
+			console.error('Error checking file content:', error);
+			isValid = false;
+			uploadMessage = 'Unable to validate file content';
+			return;
+		}
+
 		if (!isValid) return;
 
 		if (wasmLoaded) {
 			try {
 				// Process the file using WebAssembly for compression
-				const fileText = await files[0].text();
-				const compressedFileDataArray = reduce_compress_gpx(fileText);
+				const fileText = await file.text();
+				const compressedFileDataArray = reduceCompressGpx(fileText);
 
 				// Create a new file from the compressed data
 				const blob = new Blob([compressedFileDataArray], { type: 'application/octet-stream' });
-				const compressedFile = new File([blob], files[0].name.replace('.gpx', '.gpx.gz'), {
+				const compressedFile = new File([blob], file.name.replace('.gpx', '.gpx.gz'), {
 					type: 'application/gzip'
 				});
 
@@ -164,13 +190,24 @@
 			if (formInput && typeof DataTransfer !== 'undefined') {
 				try {
 					const dataTransfer = new DataTransfer();
-					dataTransfer.items.add(files[0]);
+					dataTransfer.items.add(file);
 					formInput.files = dataTransfer.files;
 				} catch (error) {
 					console.error('Error setting file input:', error);
 				}
 			}
 		}
+	}
+
+	async function readFirstBytes(file: File, bytesToRead: number): Promise<ArrayBuffer> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			const blob = file.slice(0, bytesToRead);
+
+			reader.onload = () => resolve(reader.result as ArrayBuffer);
+			reader.onerror = () => reject(reader.error);
+			reader.readAsArrayBuffer(blob);
+		});
 	}
 
 	/**
@@ -223,6 +260,11 @@
 Main form container with backdrop blur effect
 Uses a semi-transparent background to maintain contrast against map backgrounds
 -->
+<WasmLoader bind:loaded={wasmLoaded} on:load={({ detail }) => {
+  if (!detail.success) {
+    uploadMessage = 'WebAssembly module failed to load. Some features may be limited.';
+  }
+}} />
 <div
 	class="my-auto h-min w-full max-w-md rounded-lg border border-orange-700/30 bg-black/30 p-6 shadow-xl backdrop-blur-sm"
 >

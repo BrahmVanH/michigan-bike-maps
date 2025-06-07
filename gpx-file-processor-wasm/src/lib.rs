@@ -90,6 +90,39 @@ pub struct BoundingBox {
     max_lon: f64,  // Maximum longitude in decimal degrees
 }
 
+/// Validates that a string contains well-formed GPX data
+///
+/// This function performs several checks:
+/// 1. Ensures the input isn't too large
+/// 2. Validates that it contains valid XML
+/// 3. Confirms it has the expected GPX structure
+///
+/// @param gpx_string - The GPX content to validate
+/// @returns Whether the input is valid GPX data
+#[wasm_bindgen]
+pub fn validate_gpx(gpx_string: &str) -> bool {
+    // Check for reasonable size
+    if gpx_string.len() > 50_000_000 { // 50MB max
+        return false;
+    }
+    
+    // Check for XML header
+    if !gpx_string.trim().starts_with("<?xml") {
+        return false;
+    }
+    
+    // Check for GPX tag
+    if !gpx_string.contains("<gpx") {
+        return false;
+    }
+    
+    // Attempt to parse as GPX (most thorough validation)
+    match parse_gpx_from_string(gpx_string) {
+        Ok(_) => true,
+        Err(_) => false
+    }
+}
+
 /// Analyzes a GPX file string and returns detailed metrics and statistics.
 ///
 /// This function performs a comprehensive analysis of the GPX file including:
