@@ -7,7 +7,7 @@
  */
 
 // AWS SDK imports for S3 client and command operations
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 
 // Import for generating pre-signed URLs to provide temporary access to private S3 objects
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -19,6 +19,7 @@ import {
   AWS_SECRET_ACCESS_KEY_PROD,
   AWS_S3_BUCKET_GPX_PROD
 } from '$env/static/private';
+import type { s3Obj } from "@/types";
 
 /**
  * S3 client instance configured with production credentials.
@@ -116,8 +117,51 @@ export async function getGPXDownloadUrl(fileName: string): Promise<string> {
 }
 
 
-export async function getInstructionalImgs() {
-  const command = new GetObjectCommand({
-    Bucket: pro
-  })
+export async function getPresignedUrlsforDirectory(prefix: string, expiresIn = 3600) {
+  try {
+    const command = new ListObjectsV2Command({
+      Bucket: AWS_S3_BUCKET_GPX_PROD,
+      Prefix: prefix,
+      MaxKeys: 1000
+
+    })
+
+    const listResponse: ListObjectsV2CommandOutput = await s3Client.send(command);
+
+    if (!listResponse.Contents || listResponse.Contents.length === 0) {
+      return [];
+    }
+    const imgExtensions = ['jpg'];
+
+    const imgObjects = listResponse.Contents.filter(obj => {
+      const key = obj?.Key?.toLowerCase();
+      return imgExtensions.some(ext => key && key.endsWith(ext));
+    });
+
+    const presignedUrls = await Promise.all(
+      imgObjects.map(async (obj) => {
+        const getObjectCommand = new GetObjectCommand({
+          Bucket: AWS_S3_BUCKET_GPX_PROD,
+          Key: obj.Key,
+        });
+
+        const url = await getSignedUrl(s3Client, getObjectCommand, {
+          expiresIn,
+        });
+
+        return {
+          key: obj.Key,
+          url,
+          filename: obj.Key?.split('/').pop(), // Extract filename from key
+          size: obj.Size,
+          lastModified: obj.LastModified,
+        } as s3Obj;
+      })
+    );
+
+    return presignedUrls;
+  } catch (error) {
+    console.error('Error getting presigned URLs:', error);
+    throw error;
+  }
 }

@@ -44,7 +44,8 @@ export const handle: Handle = async ({ event, resolve }) => {
     `'sha256-f0te7P6ZbE9iADjkKYvtsMOW8OtaZWMHNTJPQZVa58Y='`,
     `'sha256-D7sy7olsiO3VJETSyGbEuyKOWEPhepMoRsJTHYTiTFw='`,
     `'sha256-lxduVeO8vv9sYkFhc2iiIjpDMVoQUHY0xQ9NC/6worE='`,
-    `'sha256-DDUf+DSx8+0zcUPBUoAoi/69Tnq+jNOCsW/LQUVCA64='`
+    `'sha256-DDUf+DSx8+0zcUPBUoAoi/69Tnq+jNOCsW/LQUVCA64='`,
+    `'sha256-E4Mt+Z/XFEshRm7Qjn69dhMa6AEEcZQORxQ1QLxCzLc='`
 
 
   ]
