@@ -2,6 +2,8 @@
   
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)]
 
+  ![screenshot of deployed app](static/screenshot.png)
+
 [michiganbikemaps.com](https://www.michiganbikemaps.com)
   
   ## Description 
