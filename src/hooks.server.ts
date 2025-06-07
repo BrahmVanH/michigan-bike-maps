@@ -29,7 +29,8 @@ export const handle: Handle = async ({ event, resolve }) => {
     `'sha256-ZMajLaXDMA7M2y+wb+difNSbu49hGP+XtM6MwPc0scY='`,
     `'sha256-IKiWjhBtQOXPZs4J7bzTB6dIlajtcGQc6iMznYQ7g1E='`,
     `'sha256-B41PUWl4S8gI7ikZVh9TG7g55ya7GAebzqmBFzvGpi8='`,
-    `'sha256-01LB0cG+kxl/rIzwX3Qmp7gK4XCKKJBWj6Z+AqaSE6U='`
+    `'sha256-01LB0cG+kxl/rIzwX3Qmp7gK4XCKKJBWj6Z+AqaSE6U='`,
+    `'sha256-H3KvZinGMRRwFhrAZtlJb2oonv7uzhQAslDChol0qGs='`
 
   ]
   const cspDirectives = [
