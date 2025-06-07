@@ -15,7 +15,7 @@
 		"modulize-wasm": "node ./gpx-file-processor-wasm/modulize.js",
 		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm",
 		"wasm:netlify": "cd gpx-file-processor-wasm && wasm-pack build --target web && cd .. && npm run modulize-wasm:netlify",
-    "modulize-wasm:netlify": "node ./gpx-file-processor-wasm/modulize.js netlify"
+		"modulize-wasm:netlify": "node ./gpx-file-processor-wasm/modulize.js netlify"
 	},
 	"devDependencies": {
 		"@internationalized/date": "^3.8.1",
@@ -49,6 +49,7 @@
 		"@wasm-tool/rollup-plugin-rust": "^3.0.4",
 		"prettier-plugin-svelte": "^3.3.3",
 		"prettier-plugin-tailwindcss": "^0.6.11",
+		"sveltekit-rate-limiter": "^0.6.1",
 		"uuid": "^11.1.0",
 		"vite-plugin-wasm-pack": "^0.1.12"
 	}

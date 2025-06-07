@@ -4,6 +4,7 @@ import { fail, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { zod } from 'sveltekit-superforms/adapters';
 import { uploadGPXFile } from '@/API';
 import { v4 as uuidv4 } from 'uuid';
+import { checkRateLimit } from '@/rateLimiter';
 
 export const load = (async () => {
   const form = await superValidate(zod(formSchema));
@@ -11,8 +12,14 @@ export const load = (async () => {
 }) satisfies ServerLoad;
 
 export const actions = {
-  default: async ({ request }) => {
-    const formData = await request.formData();
+  default: async (event) => {
+
+    await checkRateLimit(event);
+
+
+    const formData = await event.request.formData();
+
+
 
     const gpxFile = formData.get('gpxFile') as File;
     if (!gpxFile || gpxFile.size === 0) {
@@ -27,7 +34,6 @@ export const actions = {
       const fileName = uuidv4() + '.gpx.gz';
 
       const uploadResult = await uploadGPXFile(fileName, fileBuffer);
-
 
       formData.delete('gpxFile');
 
