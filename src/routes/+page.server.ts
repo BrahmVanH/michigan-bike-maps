@@ -21,7 +21,6 @@ export const load = (async () => {
     instructionsImgObjs = []
   }
 
-  console.log("instructionsImgObjs", instructionsImgObjs);
   const form = await superValidate(zod(formSchema));
   return { form, instructionsImgObjs };
 }) satisfies ServerLoad;

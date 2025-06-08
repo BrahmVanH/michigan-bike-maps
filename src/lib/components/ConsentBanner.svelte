@@ -82,7 +82,6 @@
 				(window as any).updateGoogleAnalyticsConsent(settings);
 			}
 
-			console.log('Consent settings saved:', settings);
 		} catch (error) {
 			console.error('Failed to save consent:', error);
 		}

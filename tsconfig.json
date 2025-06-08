@@ -11,11 +11,7 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"module": "es2022",
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["./src/lib/*"],
-			"@types": ["./types"],
-      "@types/*": ["./types/*"],
+
 		},
 	}
 	

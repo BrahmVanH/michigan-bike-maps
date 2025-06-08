@@ -21,8 +21,6 @@ export async function loadWasmModule() {
   isLoading = true;
 
   try {
-    // Try the vite-plugin-wasm-pack import first
-    console.log('Loading WASM module...');
 
     // This should work with your vite.config.ts setup
     const wasmPkg = await import('@wasm/gpx_file_processor_wasm.js');
@@ -33,33 +31,26 @@ export async function loadWasmModule() {
     }
 
     wasmModule = wasmPkg;
-    console.log('WASM module loaded successfully');
     return wasmModule;
 
   } catch (error) {
     console.error('Failed to load WASM module:', error);
 
-    // Fallback: try to load from static files with proper CSP nonce
     try {
-      console.log('Trying fallback method...');
 
-      // Create script element with nonce for CSP compliance
       const scriptElement = document.createElement('script');
       scriptElement.type = 'module';
 
-      // Get the CSP nonce from the page if available
       const nonceElement = document.querySelector('script[nonce]');
       if (nonceElement) {
         scriptElement.nonce = nonceElement.getAttribute('nonce') || '';
       }
 
-      // Load the WASM module script
       scriptElement.src = '/wasm/gpx_file_processor_wasm.js';
 
       return new Promise((resolve, reject) => {
         scriptElement.onload = async () => {
           try {
-            // Access the globally loaded module
             const globalWasm = (window as any).wasm_bindgen;
             if (globalWasm) {
               await globalWasm('/wasm/gpx_file_processor_wasm_bg.wasm');

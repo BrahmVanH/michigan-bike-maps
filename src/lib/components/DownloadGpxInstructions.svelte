@@ -26,18 +26,14 @@
 
 		s3Imgs.forEach((img) => {
 			const imgGroupKey = img.key?.split('/')[1].split('-').slice(0, 2).join('-');
-			console.log('imgGroupKey: ', imgGroupKey);
 			if (!imgGroupKey) return;
 			if (r[imgGroupKey]) {
 				r[imgGroupKey].push(img.url);
-				console.log('imgGroupKey with push', imgGroupKey);
 			} else {
 				r[imgGroupKey] = [img.url];
-				console.log('imgGroupKey with new', imgGroupKey);
 			}
 		});
 
-		console.log('r: ', r);
 
 		return r;
 	}
@@ -45,10 +41,6 @@
 	const { sources } = config;
 	const imgs = $derived(getS3ImgGroupsRecord(s3Imgs));
 
-	$effect(() => {
-		console.log('s3Imgs: ', s3Imgs);
-		console.log('imgs: ', imgs);
-	});
 </script>
 
 <Sheet>

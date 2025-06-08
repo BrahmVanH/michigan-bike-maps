@@ -42,14 +42,12 @@
 			// If gtag isn't ready yet, store the settings to apply later
 			if (!isGtagReady) {
 				pendingConsentUpdate = settings;
-				console.log('Gtag not ready, storing consent update for later:', settings);
 				return;
 			}
 
 			// Apply the consent update
 			if ((window as any).gtag) {
 				(window as any).gtag('consent', 'update', settings);
-				console.log('Google Analytics consent updated:', settings);
 			} else {
 				console.warn('gtag function not available');
 			}
@@ -68,7 +66,6 @@
 
 			// Wait for gtag to be ready before applying any stored consent
 			await waitForGtag();
-			console.log('Google Analytics gtag is ready');
 
 			// Apply any pending consent update
 			if (pendingConsentUpdate) {
@@ -124,7 +121,6 @@
 					anonymize_ip: true,
 					cookie_flags: 'SameSite=Strict;Secure'
 				});
-				console.log('Google Analytics configured');
 			}
 		});
 	</script>
