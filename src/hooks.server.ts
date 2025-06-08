@@ -1,6 +1,5 @@
 import { randomBytes } from 'crypto';
 import type { Handle } from '@sveltejs/kit';
-import { dev } from '$app/environment';
 
 export const handle: Handle = async ({ event, resolve }) => {
   const nonce = randomBytes(16).toString('base64');
@@ -51,47 +50,31 @@ export const handle: Handle = async ({ event, resolve }) => {
   //   `'sha256-XcC9ewI1FeuiVulqLrsyJJ6lyGV4uaXiRONA+yHvGpU='`,
   //   `'sha256-/iGo6UcGpuIiFpkHRmvdEsvbMOU2ko7B2G31x813+iw='`,
   //   `'sha256-+K6LAjofIxF4uGlLSV1o32DsYI1cMUku2JDTLK+dyB4='`,
-  //   `'sha256-x5pSi4aBbx6GLeWwpe9/cW9QW9m9ejdLaPHKYR5B77A='`
-
-
+  //   `'sha256-x5pSi4aBbx6GLeWwpe9/cW9QW9m9ejdLaPHKYR5B77A='`,
+  //   `'sha256-Iddof8zu4B+VzlacLTBLMaWUqee5gpAaeISW2fjhVuo='`,
+  //   `'sha256-rnKu2BM5JLzWH8N20EvLNARMmIAZJNBDpom8F+udWEA='`,
+  //   `'sha256-sC85Gm+p35m53csBNSlHI4J/ZRGrlTIn+HTsLEw9m3g='`,
+  //   `'sha256-lBl8irzUakUzRecuJZeZi3sWOU9T4fz8po/oJ68M8yw='`,
+  //   `'sha256-88JCSRwVzBdp56++hJ1r1+An2qd1c4bAnXE9i3KC4L4='`,
+  //   `'sha256-BZ8sXgqOVe2lzbNZRmc/tevmNsLrleSzqNWcnZkajFc='`
   // ]
-  const cspDirectives = [
-    "default-src 'self'",
-    `script-src 'self' 'wasm-unsafe-eval'  'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`,
-    "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://region1.google-analytics.com",
-    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://*.amazonaws.com https://s3.amazonaws.com",
-
-    "worker-src 'self' blob:",
-    "child-src 'self' blob:"
-  ];
-
-
-  let scriptSrc: string;
-
-  if (dev) {
-    // Relaxed CSP for development - allows hot reloading
-    scriptSrc = `'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com`;
-  } else {
-    // Strict CSP for production
-    scriptSrc = `'self' 'wasm-unsafe-eval' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`;
-  }
-
   // const cspDirectives = [
   //   "default-src 'self'",
-  //   `script-src ${scriptSrc}`,
+  //   `script-src 'self' 'wasm-unsafe-eval'  'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`,
   //   "style-src 'self' 'unsafe-inline'",
   //   "connect-src 'self' blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://region1.google-analytics.com",
   //   "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://*.amazonaws.com https://s3.amazonaws.com",
+
   //   "worker-src 'self' blob:",
   //   "child-src 'self' blob:"
   // ];
 
+  // response.headers.set(
+  //   'Content-Security-Policy',
+  //   cspDirectives.join('; '));
 
-  response.headers.set(
-    'Content-Security-Policy',
-    cspDirectives.join('; '));
-
+  // response.headers.set('X-Content-Type-Options', 'nosniff');
+  // response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');

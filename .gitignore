@@ -25,3 +25,6 @@ vite.config.ts.timestamp-*
 !netlify/plugins/
 
 static/~partytown
+
+sha-scripts.js
+console-output.txt
