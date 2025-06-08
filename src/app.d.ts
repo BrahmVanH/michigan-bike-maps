@@ -5,7 +5,7 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			form: unknown;
-			cspNonce: unknown;
+			cspNonce: string;
 		}
 		// interface PageData {}
 		// interface PageState {}

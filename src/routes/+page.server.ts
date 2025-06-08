@@ -1,5 +1,5 @@
 import { superValidate } from 'sveltekit-superforms';
-import { formSchema } from '$lib/components/Form/schema';
+import { formSchema } from '@/components/Form/schema';
 import { fail, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { zod } from 'sveltekit-superforms/adapters';
 import { getPresignedUrlsforDirectory, uploadGPXFile } from '@/API';
@@ -12,16 +12,18 @@ import type { s3Obj } from '@/types';
 export const load = (async () => {
   const instructionsS3Dir = 'instructions';
 
-  let instructionsImgUrls: s3Obj[] = []
+  let instructionsImgObjs: s3Obj[] = []
   try {
 
-    instructionsImgUrls = await getPresignedUrlsforDirectory(instructionsS3Dir);
+    instructionsImgObjs = await getPresignedUrlsforDirectory(instructionsS3Dir);
   } catch (err) {
     console.error("Error fetching instructions images from s3", err);
-    instructionsImgUrls = []
+    instructionsImgObjs = []
   }
+
+  console.log("instructionsImgObjs", instructionsImgObjs);
   const form = await superValidate(zod(formSchema));
-  return { form, instructionsImgUrls };
+  return { form, instructionsImgObjs };
 }) satisfies ServerLoad;
 
 export const actions = {

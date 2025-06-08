@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import Form from '$lib/components/Form/index.svelte';
+	import Form from '@/components/Form/index.svelte';
 	import harlowContour from '$lib/images/harlow-area-contour-2-01.jpg';
 	import harlowContourMobile from '$lib/images/harlow-area-contour-mobile-01.jpg';
 
 	export let data: PageData;
+
+	const {form, instructionsImgObjs} = data;
 </script>
 
 <main class="relative flex h-screen w-screen">
@@ -19,6 +21,6 @@
 		alt="dark themed contour map of harlow lake recreation area in marquette, michigan"
 	/>
 	<div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
-		<Form data={data.form} />
+		<Form data={form} instructionsS3Objs={instructionsImgObjs} />
 	</div>
 </main>

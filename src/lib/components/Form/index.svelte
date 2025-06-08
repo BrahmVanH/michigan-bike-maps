@@ -14,23 +14,28 @@
 	 */
 
 	// Import WebAssembly loader and compression function
-	import { loadWasmModule, reduceCompressGpx } from '$lib/wasm-loader';
+	import { loadWasmModule, reduceCompressGpx } from '@/wasm-loader';
 
 	// Import UI components and form handling utilities
-	import { FormField } from '$lib/components/ui/form/';
+	import { FormField } from '@/components/ui/form/';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
-	import FormButton from '$lib/components/ui/form/form-button.svelte';
+	import FormButton from '@/components/ui/form/form-button.svelte';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { formSchema, type FormSchema } from './schema';
 	import WasmLoader from '../WasmLoader.svelte';
 	import DataPolicy from '../DataPolicy.svelte';
+	import DownloadGpxInstructions from '../DownloadGpxInstructions.svelte';
+	import type { s3Obj } from '@/types';
 
 	/**
 	 * Form data passed from the server-side load function
 	 * Contains form validation schema and initial values
 	 */
-	const { data }: { data: SuperValidated<Infer<FormSchema>> } = $props();
+	const {
+		data,
+		instructionsS3Objs
+	}: { data: SuperValidated<Infer<FormSchema>>; instructionsS3Objs: s3Obj[] } = $props();
 
 	// Component state variables using Svelte 5 reactivity
 	let selectedFileName = $state(''); // Name of the selected file
@@ -273,7 +278,10 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 <div
 	class="my-auto h-min w-full max-w-md rounded-lg border border-orange-700/30 bg-black/30 p-6 shadow-xl backdrop-blur-sm"
 >
-	<h2 class="mb-4 text-2xl font-light text-orange-400">Upload GPX Route</h2>
+	<div class="mb-4 flex items-center justify-between">
+		<h2 class="text-2xl font-light text-orange-400">Upload GPX Route</h2>
+		<DownloadGpxInstructions className={""} s3Imgs={instructionsS3Objs} />
+	</div>
 
 	<!-- Success state displayed after successful upload -->
 	{#if uploadSuccess}
