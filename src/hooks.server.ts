@@ -55,16 +55,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 
   // ]
-  // const cspDirectives = [
-  //   "default-src 'self'",
-  //   `script-src 'self' 'wasm-unsafe-eval'  'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`,
-  //   "style-src 'self' 'unsafe-inline'",
-  //   "connect-src 'self' blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://region1.google-analytics.com",
-  //   "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://*.amazonaws.com https://s3.amazonaws.com",
+  const cspDirectives = [
+    "default-src 'self'",
+    `script-src 'self' 'wasm-unsafe-eval'  'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`,
+    "style-src 'self' 'unsafe-inline'",
+    "connect-src 'self' blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://region1.google-analytics.com",
+    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://*.amazonaws.com https://s3.amazonaws.com",
 
-  //   "worker-src 'self' blob:",
-  //   "child-src 'self' blob:"
-  // ];
+    "worker-src 'self' blob:",
+    "child-src 'self' blob:"
+  ];
 
 
   let scriptSrc: string;
@@ -77,15 +77,15 @@ export const handle: Handle = async ({ event, resolve }) => {
     scriptSrc = `'self' 'wasm-unsafe-eval' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`;
   }
 
-  const cspDirectives = [
-    "default-src 'self'",
-    `script-src ${scriptSrc}`,
-    "style-src 'self' 'unsafe-inline'",
-    "connect-src 'self' blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://region1.google-analytics.com",
-    "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://*.amazonaws.com https://s3.amazonaws.com",
-    "worker-src 'self' blob:",
-    "child-src 'self' blob:"
-  ];
+  // const cspDirectives = [
+  //   "default-src 'self'",
+  //   `script-src ${scriptSrc}`,
+  //   "style-src 'self' 'unsafe-inline'",
+  //   "connect-src 'self' blob: https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://region1.google-analytics.com",
+  //   "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com https://*.amazonaws.com https://s3.amazonaws.com",
+  //   "worker-src 'self' blob:",
+  //   "child-src 'self' blob:"
+  // ];
 
 
   response.headers.set(
