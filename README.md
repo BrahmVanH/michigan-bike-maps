@@ -8,7 +8,9 @@
   
   ## Description 
   
-  This is the client application for the Michigan Bike Maps project to aims to offer route planning for cyclists across the state of Michigan. Currently we are in R & D, but are currently crowd sourcing GPX data from the community and performing research. Please consider contributing! \n\n The application in its current state is built with Svelte 5 and SvelteKit and uses a custom GPX Compressor wasm program to reduce file sizes as they are sent to an AWS S3 bucket.
+  This is the client application for the Michigan Bike Maps project to aims to offer route planning for cyclists across the state of Michigan. Currently we are in R & D, and are accepting crowd sourced GPX data from the community. Please consider contributing! 
+   
+  The application in its current state is built with Svelte 5 and SvelteKit and uses a custom GPX Compressor wasm program to reduce file sizes as they are sent to an AWS S3 bucket.
   
   ## Table of Contents
 
