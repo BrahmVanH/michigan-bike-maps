@@ -19,7 +19,7 @@ use js_sys;                                    // JavaScript interop utilities
 use reduce_gpx::reduce_gpx_size;               // Custom GPX size reduction module
 use serde::{Deserialize, Serialize};           // Serialization framework
 use wasm_bindgen::prelude::*;                  // WebAssembly bindings
-use web_sys::console;                          // Logging to browser console
+// use web_sys::console;                          // Logging to browser console
 
 // Local module imports
 mod compress_gpx;   // Module for GPX compression functionality
@@ -118,7 +118,7 @@ pub fn validate_gpx(gpx_string: &str) -> bool {
     if !gpx_string.contains("<gpx") {
         return false;
     }
-    console::log_1(&JsValue::from_str("parsing gpx from string in validate_gpx"));
+    // console::log_1(&JsValue::from_str("parsing gpx from string in validate_gpx"));
 
     // Attempt to parse as GPX (most thorough validation)
     match parse_gpx_from_string(gpx_string) {
@@ -172,7 +172,7 @@ fn decompress_gpx_binary(compressed_data: &[u8]) -> Result<String, JsValue> {
     decoder.read_to_string(&mut decompressed_data)
         .map_err(|e| JsValue::from_str(&format!("Decompression error: {}", e)))?;
     
-    console::log_1(&JsValue::from_str("parsing gpx from string in decompress_gpx_binary"));
+    // console::log_1(&JsValue::from_str("parsing gpx from string in decompress_gpx_binary"));
 
     
     let parsed_gpx = parse_gpx_from_string(&decompressed_data)?;
@@ -187,7 +187,7 @@ fn decompress_gpx_binary(compressed_data: &[u8]) -> Result<String, JsValue> {
 pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
     let mut timings = HashMap::new();
     let start_time = js_sys::Date::now();
-        console::log_1(&JsValue::from_str("parsing gpx from string in analyze_gpx"));
+        // console::log_1(&JsValue::from_str("parsing gpx from string in analyze_gpx"));
 
     // Parse the original GPX file
     let original_gpx = match parse_gpx_from_string(gpx_string) {
@@ -270,7 +270,7 @@ pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
     };
 
     // Log to browser console
-    console::log_1(&JsValue::from_str(&format!("GPX analysis: {:?}", analysis)));
+    // console::log_1(&JsValue::from_str(&format!("GPX analysis: {:?}", analysis)));
 
     // Serialize to JavaScript value for return
     match serde_wasm_bindgen::to_value(&analysis) {
@@ -558,7 +558,6 @@ pub fn decompress_gpx(compressed_data: &[u8]) -> Result<String, JsValue> {
 /// * `Result<Gpx, String>` - The parsed GPX structure or an error message
 fn parse_gpx_from_string(gpx_string: &str) -> Result<Gpx, String> {
     // Use the gpx crate to parse the GPX XML
-    console::log_1(&JsValue::from_str(&format!("GPX as string pre-parse: {:?}", gpx_string)));
 
     let gpx: Gpx = gpx::read(gpx_string.as_bytes()).map_err(|e| format!("Error parsing GPX: {}", e))?;
     Ok(gpx)
@@ -571,30 +570,30 @@ fn write_gpx_from_parsed_gpx_string(parsed_gpx: Gpx) -> Result<String, String> {
     }
     String::from_utf8(buffer).map_err(|e| format!("UTF-8 conversion error: {}", e))
 }
-#[wasm_bindgen]
-pub fn log_gpx_size(data: &[u8]) -> JsValue {
-    // Try to detect format
-    let as_str = std::str::from_utf8(data).ok();
-    let (size, format) = if let Some(s) = as_str {
-        if s.trim_start().starts_with("<?xml") && s.contains("<gpx") {
-            (data.len(), "Raw GPX XML")
-        } else if s.contains("\"trk\"") && s.contains("\"trkseg\"") && s.contains("\"trkpt\"") {
-            (data.len(), "Reduced GPX JSON")
-        } else {
-            (data.len(), "Unknown text format")
-        }
-    } else {
-        (data.len(), "Compressed GPX binary")
-    };
+// #[wasm_bindgen]
+// pub fn log_gpx_size(data: &[u8]) -> JsValue {
+//     // Try to detect format
+//     let as_str = std::str::from_utf8(data).ok();
+//     let (size, format) = if let Some(s) = as_str {
+//         if s.trim_start().starts_with("<?xml") && s.contains("<gpx") {
+//             (data.len(), "Raw GPX XML")
+//         } else if s.contains("\"trk\"") && s.contains("\"trkseg\"") && s.contains("\"trkpt\"") {
+//             (data.len(), "Reduced GPX JSON")
+//         } else {
+//             (data.len(), "Unknown text format")
+//         }
+//     } else {
+//         (data.len(), "Compressed GPX binary")
+//     };
 
-    // Build result object
-    let result = js_sys::Object::new();
-    js_sys::Reflect::set(&result, &JsValue::from_str("size_bytes"), &JsValue::from_f64(size as f64)).unwrap();
-    js_sys::Reflect::set(&result, &JsValue::from_str("format"), &JsValue::from_str(format)).unwrap();
+//     // Build result object
+//     let result = js_sys::Object::new();
+//     js_sys::Reflect::set(&result, &JsValue::from_str("size_bytes"), &JsValue::from_f64(size as f64)).unwrap();
+//     js_sys::Reflect::set(&result, &JsValue::from_str("format"), &JsValue::from_str(format)).unwrap();
 
-    // Log to browser console
-    console::log_1(&JsValue::from_str(&format!("GPX format: {}, size: {} bytes", format, size)));
-    console::log_1(&result);
+//     // // Log to browser console
+//     // console::log_1(&JsValue::from_str(&format!("GPX format: {}, size: {} bytes", format, size)));
+//     // console::log_1(&result);
 
-    result.into()
-}
+//     result.into()
+// }

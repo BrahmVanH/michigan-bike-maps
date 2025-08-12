@@ -2,6 +2,8 @@
 
 @import "tw-animate-css";
 
+@import 'leaflet/dist/leaflet.css';
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -115,7 +117,25 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
+  .subscript-btn-text {
+    vertical-align: sub;
+
+    font-size: 0.8em;
+
+    line-height: 1.0;
+    text-decoration: underline;
+    cursor: pointer;
+
+
+  }
+
+  .subscript-bnt-text:hover {
+    scale: 1.1%;
+  }
+
 }

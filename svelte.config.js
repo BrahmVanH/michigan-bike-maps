@@ -26,7 +26,8 @@ const config = {
 					'data:',
 					'https://www.google-analytics.com',
 					'https://www.googletagmanager.com',
-					'https://*.amazonaws.com'
+					'https://*.amazonaws.com',
+					'https://*.tile.opentopomap.org'
 				],
 				'connect-src': [
 					'self',

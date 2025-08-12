@@ -28,18 +28,25 @@
 	import DownloadGpxInstructions from '../DownloadGpxInstructions.svelte';
 	import type { s3Obj } from '@/types';
 	import { validateUploadedGpxFile } from '@/utils/gpx';
+	import { v4 as uuidv4 } from 'uuid';
 
+	interface Props {
+		data: SuperValidated<Infer<FormSchema>>;
+		instructionsS3Objs: s3Obj[];
+		setGpxString: (newGpxString: string) => void;
+		delayedSetGpxString: (newGpxString: string) => void;
+	}
 	/**
 	 * Form data passed from the server-side load function
 	 * Contains form validation schema and initial values
 	 */
-	const {
-		data,
-		instructionsS3Objs
-	}: { data: SuperValidated<Infer<FormSchema>>; instructionsS3Objs: s3Obj[] } = $props();
+	const { data, instructionsS3Objs, delayedSetGpxString, setGpxString }: Props = $props();
 
 	// Component state variables using Svelte 5 reactivity
 	let selectedFileName = $state(''); // Name of the selected file
+	let processedFileName = $state(''); // Name of the selected file after processing
+	let uploadedGpxString = $state(''); // User's uploaded gpx string
+	let showFullProcessedName = $state(false); // Determines whether to show the full or partial name of of the processed full in the form
 	let isSubmitting = $state(false); // Whether the form is currently submitting
 	let isDragging = $state(false); // Whether a file is being dragged over the drop zone
 	let isValid = $state(true); // Whether the selected file is a valid GPX file
@@ -48,6 +55,7 @@
 	let uploadMessage = $state(''); // Message to display to the user
 	let wasmLoaded = $state(false); // Whether the WebAssembly module has loaded
 	let showDataDialog = $state(false);
+	let showMapLoadingLoader = $state(false);
 
 	async function decompressGzipData(file: File, originalFileName: string) {
 		const ds = new DecompressionStream('gzip');
@@ -170,13 +178,16 @@
 
 		if (wasmLoaded) {
 			try {
-				// Process the file using WebAssembly for compression
+				// Process the validated file using WebAssembly for compression
 				const fileText = await file.text();
 				const compressedFileDataArray = await reduceCompressGpx(fileText);
+				const newFileName = uuidv4() + '.gpx.gz';
+
+				uploadedGpxString = fileText;
 
 				// Create a new file from the compressed data
 				const blob = new Blob([compressedFileDataArray], { type: 'application/octet-stream' });
-				const compressedFile = new File([blob], file.name.replace('.gpx', '.gpx.gz'), {
+				const compressedFile = new File([blob], newFileName, {
 					type: 'application/gzip'
 				});
 
@@ -188,7 +199,8 @@
 						dataTransfer.items.add(compressedFile);
 						formInput.files = dataTransfer.files;
 
-						selectedFileName = compressedFile.name;
+						// In case the compression process changes the name for any reason
+						processedFileName = compressedFile.name;
 					} catch (error) {
 						console.error('Error setting file input:', error);
 					}
@@ -268,6 +280,13 @@
 			fileInputRef.value = '';
 		}
 	}
+
+	$effect(() => {
+		if (uploadSuccess && uploadedGpxString) {
+			showMapLoadingLoader = true;
+			delayedSetGpxString(uploadedGpxString);
+		}
+	});
 </script>
 
 <!-- 
@@ -331,6 +350,20 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 				Upload Another Route
 			</button>
 		</div>
+		<!-- Map loading message with purposeful delay -->
+		{#if showMapLoadingLoader}
+			<div
+				class="mt-6 flex flex-col items-center justify-center rounded-lg border border-orange-700/30 bg-black/40 p-4 shadow-md backdrop-blur-sm"
+			>
+				<div class="mb-2 flex items-center justify-center">
+					<span class="loader mr-3"></span>
+					<span class="text-lg font-medium text-orange-400">Loading your map...</span>
+				</div>
+				<span class="text-sm text-gray-400"
+					>Please wait while your route is processed and displayed.</span
+				>
+			</div>
+		{/if}
 		<!-- Form state for file selection and upload -->
 	{:else}
 		<form method="POST" use:enhance enctype="multipart/form-data" class="space-y-4">
@@ -371,23 +404,46 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 							</svg>
 
 							<!-- Dynamic text based on file selection state -->
-							<div class="mt-2 flex flex-col text-sm text-gray-200">
-								<p class="font-medium">
-									{#if isDragging}
-										Drop your GPX file here
-									{:else if selectedFileName && !isValid}
-										Invalid file type. Please select a .gpx file
-									{:else if selectedFileName}
-										{selectedFileName}
-									{:else}
-										<span
-											>Drop your GPX file here, or <label
-												for="gpxFileHelper"
-												class="cursor-pointer text-orange-400 hover:text-orange-300">browse</label
-											></span
-										>
-									{/if}
-								</p>
+							<div class="mt-2 flex flex-col text-sm text-gray-200 [&>p]:font-medium">
+								{#if isDragging}
+									<p>Drop your GPX file here</p>
+								{:else if selectedFileName && !isValid}
+									<p>Invalid file type. Please select a .gpx file</p>
+								{:else if selectedFileName}
+									<p class="mx-1">
+										Your file: {selectedFileName}
+									</p>
+								{:else}
+									<span
+										>Drop your GPX file here, or <label
+											for="gpxFileHelper"
+											class="cursor-pointer text-orange-400 hover:text-orange-300">browse</label
+										></span
+									>
+								{/if}
+								{#if processedFileName && !showFullProcessedName}
+									<div class="mt-1 flex space-x-1">
+										<p>Post-process:</p>
+										<div class="flex">
+											<p>{processedFileName.split('').slice(0, 13).join('')}</p>
+											<button
+												class="content"
+												onclick={() => {
+													showFullProcessedName = true;
+												}}
+											>
+												<span class="subscript-btn-text">[...]</span>
+											</button>
+											<p>.gpx.gz</p>
+										</div>
+									</div>
+								{/if}
+								{#if processedFileName && showFullProcessedName}
+									<p>
+										Post-process:
+										<span>{processedFileName}</span>
+									</p>
+								{/if}
 								{#if !selectedFileName}
 									<p class="mt-1 text-xs text-gray-400">GPX files only (max 10MB)</p>
 								{/if}
@@ -468,3 +524,23 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 		</form>
 	{/if}
 </div>
+
+<style>
+	.loader {
+		width: 1.5rem;
+		height: 1.5rem;
+		border: 3px solid var(--color-border, #f59e42);
+		border-top: 3px solid var(--color-primary, #ea580c);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+		display: inline-block;
+	}
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+</style>
