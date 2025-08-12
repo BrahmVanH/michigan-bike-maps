@@ -19,6 +19,7 @@ use js_sys;                                    // JavaScript interop utilities
 use reduce_gpx::reduce_gpx_size;               // Custom GPX size reduction module
 use serde::{Deserialize, Serialize};           // Serialization framework
 use wasm_bindgen::prelude::*;                  // WebAssembly bindings
+use web_sys::console;                          // Logging to browser console
 
 // Local module imports
 mod compress_gpx;   // Module for GPX compression functionality
@@ -76,6 +77,9 @@ pub struct GpxAnalysis {
     elevation_range: Option<(f64, f64)>, // Min and max elevation if available
     bounding_box: Option<BoundingBox>,  // Geographical bounds of the GPX data
     timing_ms: HashMap<String, f64>,    // Performance metrics for processing steps
+    decompressed_size_bytes: usize,     // Size of decompressed GPX data
+    decompressed_valid: bool,           // Whether decompressed data is valid GPX
+    decompressed_error: Option<String>, // Error message if decompression failed
 }
 
 /// Geographical bounding box for the GPX data.
@@ -114,7 +118,8 @@ pub fn validate_gpx(gpx_string: &str) -> bool {
     if !gpx_string.contains("<gpx") {
         return false;
     }
-    
+    console::log_1(&JsValue::from_str("parsing gpx from string in validate_gpx"));
+
     // Attempt to parse as GPX (most thorough validation)
     match parse_gpx_from_string(gpx_string) {
         Ok(_) => true,
@@ -135,55 +140,85 @@ pub fn validate_gpx(gpx_string: &str) -> bool {
 ///
 /// # Returns
 /// * `Result<JsValue, JsValue>` - A JavaScript object containing analysis data or an error
-#[wasm_bindgen]
-pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
-    // Initialize timing tracking for performance analysis
-    let mut timings = HashMap::new();
-    let start_time = js_sys::Date::now();
+
+// Helper: Analyze size and format
+// #[wasm_bindgen]
+// pub fn analyze_gpx_size(data: &[u8]) -> (usize, String) {
+//     let as_str = std::str::from_utf8(data).ok();
+//     if let Some(s) = as_str {
+//         if s.trim_start().starts_with("<?xml") && s.contains("<gpx") {
+//             (data.len(), "Raw GPX XML".to_string())
+//         } else if s.contains("\"trk\"") && s.contains("\"trkseg\"") && s.contains("\"trkpt\"") {
+//             (data.len(), "Reduced GPX JSON".to_string())
+//         } else {
+//             (data.len(), "Unknown text format".to_string())
+//         }
+//     } else {
+//         (data.len(), "Compressed GPX binary".to_string())
+//     }
+// }
+
+// Helper: Validate GPX XML
+fn is_valid_gpx_xml(gpx_string: &str) -> bool {
+    validate_gpx(gpx_string)
+}
+
+// Helper: Decompress GPX binary
+fn decompress_gpx_binary(compressed_data: &[u8]) -> Result<String, JsValue> {
+    let mut decoder = GzDecoder::new(compressed_data);
+    
+    let mut decompressed_data = String::new();
+    
+    decoder.read_to_string(&mut decompressed_data)
+        .map_err(|e| JsValue::from_str(&format!("Decompression error: {}", e)))?;
+    
+    console::log_1(&JsValue::from_str("parsing gpx from string in decompress_gpx_binary"));
 
     
+    let parsed_gpx = parse_gpx_from_string(&decompressed_data)?;
     
+    let decompressed_gpx_xml = write_gpx_from_parsed_gpx_string(parsed_gpx)?;
+    
+    Ok(decompressed_gpx_xml)
+}
+
+/// Analyzes a GPX file string and returns detailed metrics and statistics, including decompression and integrity check.
+#[wasm_bindgen]
+pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
+    let mut timings = HashMap::new();
+    let start_time = js_sys::Date::now();
+        console::log_1(&JsValue::from_str("parsing gpx from string in analyze_gpx"));
+
     // Parse the original GPX file
     let original_gpx = match parse_gpx_from_string(gpx_string) {
         Ok(gpx) => gpx,
         Err(e) => return Err(JsValue::from_str(&format!("Error parsing GPX: {}", e))),
     };
-    
-    // Record parsing time
     timings.insert("parsing".to_string(), js_sys::Date::now() - start_time);
-    
+
     // Extract basic metrics from the original GPX file
     let original_size = gpx_string.len();
     let original_point_count = count_points(&original_gpx);
     let tracks_count = original_gpx.tracks.len();
-    let segments_count = original_gpx.tracks.iter()
-        .map(|track| track.segments.len())
-        .sum();
-    
-    // Calculate additional geographical metrics
+    let segments_count = original_gpx.tracks.iter().map(|track| track.segments.len()).sum();
     let elevation_range = calculate_elevation_range(&original_gpx);
     let bounding_box = calculate_bounding_box(&original_gpx);
-    
-    // Reduce the GPX file size by simplifying track points
+
+    // Reduce the GPX file size by simplifying track points and add <gpx> tag wrapper back to content
     let reduce_start = js_sys::Date::now();
     let reduced_gpx_string = match reduce_gpx_size(gpx_string) {
-        Ok(reduced) => reduced,
+        Ok(reduced) => format!("<gpx>{}</gpx>",reduced),
         Err(e) => return Err(e),
     };
     timings.insert("reduction".to_string(), js_sys::Date::now() - reduce_start);
-    
+
     // Parse the reduced GPX to extract metrics
     let reduced_gpx: SmlrGpx = match serde_json::from_str(&reduced_gpx_string) {
         Ok(gpx) => gpx,
         Err(e) => return Err(JsValue::from_str(&format!("Error parsing reduced GPX: {}", e))),
     };
-    
-    // Count points in the reduced GPX
-    let reduced_point_count = reduced_gpx.trk.iter()
-        .flat_map(|track| &track.trkseg)
-        .map(|segment| segment.trkpt.len())
-        .sum();
-    
+    let reduced_point_count = reduced_gpx.trk.iter().flat_map(|track| &track.trkseg).map(|segment| segment.trkpt.len()).sum();
+
     // Compress the reduced GPX
     let compress_start = js_sys::Date::now();
     let compressed_gpx = match compress_gpx(&reduced_gpx_string) {
@@ -191,25 +226,30 @@ pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
         Err(e) => return Err(e),
     };
     timings.insert("compression".to_string(), js_sys::Date::now() - compress_start);
-    
-    // Calculate size metrics
+
     let reduced_size = reduced_gpx_string.len();
     let compressed_size = compressed_gpx.len();
-    
-    // Calculate compression ratio (higher is better)
     let compression_ratio = if original_size > 0 {
         1.0 - (compressed_size as f64 / original_size as f64)
     } else {
         0.0
     };
-    
-    // Calculate point reduction ratio (higher means more points removed)
     let point_reduction_ratio = if original_point_count > 0 {
         1.0 - (reduced_point_count as f64 / original_point_count as f64)
     } else {
         0.0
     };
-    
+
+    // Decompress and check integrity
+    let (decompressed_size, decompressed_valid, decompressed_error) = match decompress_gpx_binary(&compressed_gpx) {
+        Ok(decompressed_gpx) => {
+            let size = decompressed_gpx.len();
+            let valid = is_valid_gpx_xml(&decompressed_gpx);
+            (size, valid, None)
+        },
+        Err(e) => (0, false, Some(e.as_string().unwrap_or_else(|| "Unknown error".to_string()))),
+    };
+
     // Create the analysis object with all collected metrics
     let analysis = GpxAnalysis {
         original_size_bytes: original_size,
@@ -224,14 +264,116 @@ pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
         elevation_range,
         bounding_box,
         timing_ms: timings,
+        decompressed_size_bytes: decompressed_size,
+        decompressed_valid,
+        decompressed_error,
     };
-    
+
+    // Log to browser console
+    console::log_1(&JsValue::from_str(&format!("GPX analysis: {:?}", analysis)));
+
     // Serialize to JavaScript value for return
     match serde_wasm_bindgen::to_value(&analysis) {
         Ok(js) => Ok(js),
         Err(e) => Err(JsValue::from_str(&format!("Serialization error: {}", e))),
     }
 }
+// pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
+//     // Initialize timing tracking for performance analysis
+//     let mut timings = HashMap::new();
+//     let start_time = js_sys::Date::now();
+
+    
+    
+//     // Parse the original GPX file
+//     let original_gpx = match parse_gpx_from_string(gpx_string) {
+//         Ok(gpx) => gpx,
+//         Err(e) => return Err(JsValue::from_str(&format!("Error parsing GPX: {}", e))),
+//     };
+    
+//     // Record parsing time
+//     timings.insert("parsing".to_string(), js_sys::Date::now() - start_time);
+    
+//     // Extract basic metrics from the original GPX file
+//     let original_size = gpx_string.len();
+//     let original_point_count = count_points(&original_gpx);
+//     let tracks_count = original_gpx.tracks.len();
+//     let segments_count = original_gpx.tracks.iter()
+//         .map(|track| track.segments.len())
+//         .sum();
+    
+//     // Calculate additional geographical metrics
+//     let elevation_range = calculate_elevation_range(&original_gpx);
+//     let bounding_box = calculate_bounding_box(&original_gpx);
+    
+//     // Reduce the GPX file size by simplifying track points
+//     let reduce_start = js_sys::Date::now();
+//     let reduced_gpx_string = match reduce_gpx_size(gpx_string) {
+//         Ok(reduced) => reduced,
+//         Err(e) => return Err(e),
+//     };
+//     timings.insert("reduction".to_string(), js_sys::Date::now() - reduce_start);
+    
+//     // Parse the reduced GPX to extract metrics
+//     let reduced_gpx: SmlrGpx = match serde_json::from_str(&reduced_gpx_string) {
+//         Ok(gpx) => gpx,
+//         Err(e) => return Err(JsValue::from_str(&format!("Error parsing reduced GPX: {}", e))),
+//     };
+    
+//     // Count points in the reduced GPX
+//     let reduced_point_count = reduced_gpx.trk.iter()
+//         .flat_map(|track| &track.trkseg)
+//         .map(|segment| segment.trkpt.len())
+//         .sum();
+    
+//     // Compress the reduced GPX
+//     let compress_start = js_sys::Date::now();
+//     let compressed_gpx = match compress_gpx(&reduced_gpx_string) {
+//         Ok(compressed) => compressed,
+//         Err(e) => return Err(e),
+//     };
+//     timings.insert("compression".to_string(), js_sys::Date::now() - compress_start);
+    
+//     // Calculate size metrics
+//     let reduced_size = reduced_gpx_string.len();
+//     let compressed_size = compressed_gpx.len();
+    
+//     // Calculate compression ratio (higher is better)
+//     let compression_ratio = if original_size > 0 {
+//         1.0 - (compressed_size as f64 / original_size as f64)
+//     } else {
+//         0.0
+//     };
+    
+//     // Calculate point reduction ratio (higher means more points removed)
+//     let point_reduction_ratio = if original_point_count > 0 {
+//         1.0 - (reduced_point_count as f64 / original_point_count as f64)
+//     } else {
+//         0.0
+//     };
+    
+//     // Create the analysis object with all collected metrics
+//     let analysis = GpxAnalysis {
+//         original_size_bytes: original_size,
+//         reduced_size_bytes: reduced_size,
+//         compressed_size_bytes: compressed_size,
+//         compression_ratio,
+//         point_count: original_point_count,
+//         reduced_point_count,
+//         point_reduction_ratio,
+//         tracks_count,
+//         segments_count,
+//         elevation_range,
+//         bounding_box,
+//         timing_ms: timings,
+//     };
+    
+//     // Serialize to JavaScript value for return
+//     match serde_wasm_bindgen::to_value(&analysis) {
+//         Ok(js) => Ok(js),
+//         Err(e) => Err(JsValue::from_str(&format!("Serialization error: {}", e))),
+//     }
+// }
 
 /// Counts the total number of track points in a GPX file.
 ///
@@ -368,6 +510,9 @@ pub fn process_gpx_with_analytics(gpx_string: &str) -> Result<JsValue, JsValue> 
 pub fn reduce_compress_gpx(gpx_string: &str) -> Result<Vec<u8>, JsValue> {
     let is_valid = validate_gpx(&gpx_string);
 
+    let _gpx_processing_analysis = analyze_gpx(&gpx_string);
+
+    
     if !is_valid {
         return Err(JsValue::from_str(&format!("Incorrect file format")));
     }
@@ -413,6 +558,43 @@ pub fn decompress_gpx(compressed_data: &[u8]) -> Result<String, JsValue> {
 /// * `Result<Gpx, String>` - The parsed GPX structure or an error message
 fn parse_gpx_from_string(gpx_string: &str) -> Result<Gpx, String> {
     // Use the gpx crate to parse the GPX XML
+    console::log_1(&JsValue::from_str(&format!("GPX as string pre-parse: {:?}", gpx_string)));
+
     let gpx: Gpx = gpx::read(gpx_string.as_bytes()).map_err(|e| format!("Error parsing GPX: {}", e))?;
     Ok(gpx)
+}
+
+fn write_gpx_from_parsed_gpx_string(parsed_gpx: Gpx) -> Result<String, String> {
+    let mut buffer = Vec::new();
+    if let Err(e) = gpx::write(&parsed_gpx, &mut buffer) {
+        return Err(format!("Error writing GPX: {}", e));
+    }
+    String::from_utf8(buffer).map_err(|e| format!("UTF-8 conversion error: {}", e))
+}
+#[wasm_bindgen]
+pub fn log_gpx_size(data: &[u8]) -> JsValue {
+    // Try to detect format
+    let as_str = std::str::from_utf8(data).ok();
+    let (size, format) = if let Some(s) = as_str {
+        if s.trim_start().starts_with("<?xml") && s.contains("<gpx") {
+            (data.len(), "Raw GPX XML")
+        } else if s.contains("\"trk\"") && s.contains("\"trkseg\"") && s.contains("\"trkpt\"") {
+            (data.len(), "Reduced GPX JSON")
+        } else {
+            (data.len(), "Unknown text format")
+        }
+    } else {
+        (data.len(), "Compressed GPX binary")
+    };
+
+    // Build result object
+    let result = js_sys::Object::new();
+    js_sys::Reflect::set(&result, &JsValue::from_str("size_bytes"), &JsValue::from_f64(size as f64)).unwrap();
+    js_sys::Reflect::set(&result, &JsValue::from_str("format"), &JsValue::from_str(format)).unwrap();
+
+    // Log to browser console
+    console::log_1(&JsValue::from_str(&format!("GPX format: {}, size: {} bytes", format, size)));
+    console::log_1(&result);
+
+    result.into()
 }

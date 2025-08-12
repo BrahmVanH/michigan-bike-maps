@@ -128,6 +128,9 @@ pub fn reduce_gpx_size(gpx_string: &str) -> Result<String, JsValue> {
     let smlr_gpx_str = serde_json::to_string(&smlr_gpx)
         .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))?;
 
+    // Add <gpx> tag back to content - not needed all of the sudden 8/11/25
+    // smlr_gpx_str = format!("<gpx>{}</gpx>",smlr_gpx_str);
+    
     // Return the simplified GPX as a JSON string
     Ok(smlr_gpx_str)
 }

@@ -27,6 +27,7 @@
 	import DataPolicy from '../DataPolicy.svelte';
 	import DownloadGpxInstructions from '../DownloadGpxInstructions.svelte';
 	import type { s3Obj } from '@/types';
+	import { validateUploadedGpxFile } from '@/utils/gpx';
 
 	/**
 	 * Form data passed from the server-side load function
@@ -47,6 +48,16 @@
 	let uploadMessage = $state(''); // Message to display to the user
 	let wasmLoaded = $state(false); // Whether the WebAssembly module has loaded
 	let showDataDialog = $state(false);
+
+	async function decompressGzipData(file: File, originalFileName: string) {
+		const ds = new DecompressionStream('gzip');
+		const decompressedStream = file.stream().pipeThrough(ds);
+
+		const decompressedBlob = await new Response(decompressedStream).blob();
+		const decompressedFile = new File([decompressedBlob], originalFileName, {
+			type: originalFileName
+		});
+	}
 
 	function openDataDialog(): void {
 		showDataDialog = true;
@@ -127,7 +138,7 @@
 	async function processFiles(files: FileList | null) {
 		if (!files || files.length === 0) {
 			selectedFileName = '';
-			isValid = true;
+			isValid = false;
 			return;
 		}
 
@@ -135,17 +146,16 @@
 
 		selectedFileName = file.name;
 
-		// Validate file extension is .gpx
-		isValid = selectedFileName.toLowerCase().endsWith('.gpx');
+		let fileContent: string;
 
-		// Check the file's content type or signature
 		try {
-			const firstBytes = await readFirstBytes(file, 100);
-			const fileContent = new TextDecoder().decode(firstBytes);
+			// Validate file extension is .gpx
+			const gpxValidationResponse = await validateUploadedGpxFile(file);
 
-			// Basic check for XML structure and GPX content
-			if (!fileContent.includes('<?xml') || !fileContent.includes('<gpx')) {
-				isValid = false;
+			isValid = gpxValidationResponse.success;
+			fileContent = gpxValidationResponse.content;
+
+			if (!isValid) {
 				uploadMessage = 'Invalid GPX file content';
 				return;
 			}
@@ -280,7 +290,7 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 >
 	<div class="mb-4 flex items-center justify-between">
 		<h2 class="text-2xl font-light text-orange-400">Upload GPX Route</h2>
-		<DownloadGpxInstructions className={""} s3Imgs={instructionsS3Objs} />
+		<DownloadGpxInstructions className={''} s3Imgs={instructionsS3Objs} />
 	</div>
 
 	<!-- Success state displayed after successful upload -->

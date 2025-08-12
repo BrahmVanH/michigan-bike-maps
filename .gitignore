@@ -28,3 +28,6 @@ static/~partytown
 
 sha-scripts.js
 console-output.txt
+
+# test data
+src/lib/test-data
