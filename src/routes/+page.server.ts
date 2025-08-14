@@ -33,9 +33,9 @@ export const actions = {
 
     const formData = await event.request.formData();
     const gpxFile = formData.get('gpxFile') as File;
+    let form = await superValidate(formData, zod(formSchema));
 
     if (!gpxFile || gpxFile.size === 0) {
-      const form = await superValidate(formData, zod(formSchema));
       form.errors.gpxFile = ['Please upload a GPX file'];
       return fail(400, { form });
     }
@@ -44,7 +44,6 @@ export const actions = {
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
     if (gpxFile.size > MAX_SIZE_BYTES) {
       formData.delete("gpxFile")
-      const form = await superValidate(formData, zod(formSchema));
       form.errors.gpxFile = [`File exceeds maximum size of ${MAX_SIZE_MB}MB`];
       return fail(400, { form });
     }
@@ -53,27 +52,46 @@ export const actions = {
       const arrayBuffer = await gpxFile.arrayBuffer();
       const fileBuffer = Buffer.from(arrayBuffer);
 
-
-
       const fileName = uuidv4() + '.gpx.gz';
 
-      const uploadResult = await uploadGPXFile(fileName, fileBuffer);
-
+      
+      // Redeclare validated form schema without gpxFile for serialization... seems i may 
+      // have followed a thread that does make sense. GpxFile is the only field in the form,
+      //  why return the validated form with no fields? Looking into it later
       formData.delete('gpxFile');
 
-      const form = await superValidate(formData, zod(formSchema));
+      form = await superValidate(formData, zod(formSchema));
 
-      return {
-        form,
-        uploadResult: {
-          success: true,
-          fileName,
-          size: gpxFile.size,
-          type: gpxFile.type,
-          message: 'File uploaded to S3 successfully',
-          s3Status: uploadResult.$metadata.httpStatusCode
+
+      if (import.meta.env.DEV) {
+        return {
+          form,
+          uploadResult: {
+            success: true,
+            fileName,
+            size: gpxFile.size,
+            type: gpxFile.type,
+            message: 'Mock file upload to S3 successfully executed',
+            s3Status: 200
+          }
         }
-      };
+      } else {
+
+        const uploadResult = await uploadGPXFile(fileName, fileBuffer);
+
+
+        return {
+          form,
+          uploadResult: {
+            success: true,
+            fileName,
+            size: gpxFile.size,
+            type: gpxFile.type,
+            message: 'File uploaded to S3 successfully',
+            s3Status: uploadResult.$metadata.httpStatusCode
+          }
+        };
+      }
     } catch (error) {
       console.error('Error uploading to S3:', error);
 

@@ -2,6 +2,14 @@ import GpxParser from 'gpxparser';
 import type { Position } from 'geojson';
 import toGeoJSON from '@mapbox/togeojson';
 
+export const gpxToString = (gpxData: any) => {
+	const gpx = new GpxParser();
+	gpx.parse(gpxData);
+	const gpxString = gpx.xmlSource;
+	console.log("gpxString: ", gpxString);
+	return gpxString;
+}
+
 export const getRouteCenter = (gpxRouteData: string) => {
 	const gpx = new GpxParser();
 	gpx.parse(gpxRouteData);

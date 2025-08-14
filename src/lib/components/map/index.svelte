@@ -8,7 +8,8 @@
 		polyline as polylineL,
 		tileLayer as tileLayerL,
 		type LatLngTuple,
-		type Map
+		type Map,
+		type Layer as LayerL
 	} from 'leaflet';
 
 	import {
@@ -19,9 +20,9 @@
 
 	import type { Feature, GeoJsonObject, Geometry, LineString } from 'geojson';
 
-	// import gpxString from '../data/geo/bareback-to-rickles.gpx?raw';
+	import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 
-	let { gpxString, mapReady }: { gpxString: string; mapReady: boolean } = $props();
+	let { gpxString = devGpxString }: { gpxString?: string } = $props();
 
 	// import geoJsonFile from '../data/geo/bareback-to-slackey.geojson?raw';
 
@@ -75,8 +76,7 @@
 							opacity: 1,
 							className: 'elevation-line' // Add a class for easier debugging
 						});
-
-						routeGroup.addLayer(polyline);
+						routeGroup.addLayer(polyline as unknown as LayerL);
 					});
 				}
 			}
@@ -174,7 +174,6 @@
 <svelte:window on:resize={resizeMap} />
 
 <style>
-
 	.map {
 		height: 800px;
 		width: 100%;

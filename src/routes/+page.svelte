@@ -22,7 +22,7 @@
 
 	const { form, instructionsImgObjs } = data;
 
-	let gpxString = $state<string>('');
+	let gpxString = $state<string | null>(null);
 
 	function setGpxString(newGpxString: string) {
 		gpxString = newGpxString;
@@ -52,10 +52,12 @@
 		alt="dark themed contour map of harlow lake recreation area in marquette, michigan"
 	/>
 	<div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
-		{#if gpxString}
+		{#if lazyMap}
 			{#await lazyMap then { default: Map }}
-				<Map {gpxString} />
+				<Map />
 			{/await}
+		{/if}
+		<!-- {#if gpxString}
 		{:else}
 			<Form
 				data={form}
@@ -63,6 +65,6 @@
 				{delayedSetGpxString}
 				{setGpxString}
 			/>
-		{/if}
+		{/if} -->
 	</div>
 </main>
