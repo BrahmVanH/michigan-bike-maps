@@ -12,18 +12,17 @@
 use std::{collections::HashMap, io::Read};
 
 // External crate imports
-use compress_gpx::compress_gpx;                // Custom compression module
 use flate2::bufread::GzDecoder;                // Decompression functionality
 use gpx::Gpx;                                  // GPX parsing and representation
 use js_sys;                                    // JavaScript interop utilities
-use reduce_gpx::reduce_gpx_size;               // Custom GPX size reduction module
 use serde::{Deserialize, Serialize};           // Serialization framework
 use wasm_bindgen::prelude::*;                  // WebAssembly bindings
 // use web_sys::console;                          // Logging to browser console
 
 // Local module imports
-mod compress_gpx;   // Module for GPX compression functionality
-mod reduce_gpx;     // Module for GPX size reduction algorithms
+mod gpx_processing; // Module for GPX processing
+mod geo_tiff; // Module for GeoTIFF processing
+mod logging;
 
 /// Simplified GPX structure for serialization and compression.
 ///
@@ -206,7 +205,7 @@ pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
 
     // Reduce the GPX file size by simplifying track points and add <gpx> tag wrapper back to content
     let reduce_start = js_sys::Date::now();
-    let reduced_gpx_string = match reduce_gpx_size(gpx_string) {
+    let reduced_gpx_string = match gpx_processing::reduce::reduce_gpx_size(gpx_string) {
         Ok(reduced) => format!("<gpx>{}</gpx>",reduced),
         Err(e) => return Err(e),
     };
@@ -221,7 +220,7 @@ pub fn analyze_gpx(gpx_string: &str) -> Result<JsValue, JsValue> {
 
     // Compress the reduced GPX
     let compress_start = js_sys::Date::now();
-    let compressed_gpx = match compress_gpx(&reduced_gpx_string) {
+    let compressed_gpx = match gpx_processing::compress::compress_gpx(&reduced_gpx_string) {
         Ok(compressed) => compressed,
         Err(e) => return Err(e),
     };
@@ -517,10 +516,10 @@ pub fn reduce_compress_gpx(gpx_string: &str) -> Result<Vec<u8>, JsValue> {
         return Err(JsValue::from_str(&format!("Incorrect file format")));
     }
     // First reduce the GPX file size by simplifying track points
-    let smlr_gpx = reduce_gpx_size(gpx_string)?;
+    let smlr_gpx = gpx_processing::reduce::reduce_gpx_size(gpx_string)?;
 
     // Then compress the reduced GPX file
-    let compressed_gpx = compress_gpx(&smlr_gpx)?;
+    let compressed_gpx = gpx_processing::compress::compress_gpx(&smlr_gpx)?;
 
     Ok(compressed_gpx)
 }

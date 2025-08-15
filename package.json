@@ -14,8 +14,8 @@
 		"lint": "prettier --check .",
 		"modulize-wasm": "node ./gpx-file-processor-wasm/modulize.js",
 		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm",
-		"wasm:netlify": "cd gpx-file-processor-wasm && wasm-pack build --target web && cd .. && npm run modulize-wasm:netlify",
-		"modulize-wasm:netlify": "node ./gpx-file-processor-wasm/modulize.js netlify"
+		"modulize-wasm:netlify": "node ./gpx-file-processor-wasm/modulize.js netlify",
+		"wasm:netlify": "cd gpx-file-processor-wasm && wasm-pack build --target web && cd .. && npm run modulize-wasm:netlify"
 	},
 	"devDependencies": {
 		"@iconify/svelte": "^5.0.0",
@@ -30,12 +30,12 @@
 		"@tailwindcss/vite": "^4.0.0",
 		"@types/geojson": "^7946.0.16",
 		"@types/leaflet": "^1.9.20",
-		
 		"@types/node": "^22.15.29",
 		"bits-ui": "^2.5.0",
 		"clsx": "^2.1.1",
 		"formsnap": "^2.0.1",
 		"prettier": "^3.4.2",
+		"prettier-plugin-svelte": "^3.4.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"sveltekit-superforms": "^2.25.0",
@@ -55,7 +55,7 @@
 		"@wasm-tool/rollup-plugin-rust": "^3.0.4",
 		"gpxparser": "^3.0.8",
 		"leaflet": "^1.9.4",
-		"prettier-plugin-svelte": "^3.3.3",
+		"leaflet-edgebuffer": "^1.0.7",
 		"prettier-plugin-tailwindcss": "^0.6.11",
 		"sveltekit-rate-limiter": "^0.6.1",
 		"uuid": "^11.1.0",

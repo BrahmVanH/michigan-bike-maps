@@ -7,10 +7,13 @@
 		geoJSON as geoJSONL,
 		polyline as polylineL,
 		tileLayer as tileLayerL,
+		latLngBounds as latLngBoundsL,
 		type LatLngTuple,
 		type Map,
-		type Layer as LayerL
+		type Layer as LayerL,
+		LatLng
 	} from 'leaflet';
+	import '$lib/leaflet-edgebuffer';
 
 	import {
 		convertGpxStringToGeoJson,
@@ -21,6 +24,9 @@
 	import type { Feature, GeoJsonObject, Geometry, LineString } from 'geojson';
 
 	import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
+	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
+	import { getJpegFromGeoTiff } from '@/wasm-loader';
+	import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
 
 	let { gpxString = devGpxString }: { gpxString?: string } = $props();
 
@@ -32,6 +38,13 @@
 	onMount(async () => {
 		if (mapElement) {
 			initMap();
+			mapElement.offsetHeight;
+			// setTimeout(() => mapElement.classList.add('active'), 200);
+			// setTimeout(() => {
+			// 	addRouteToMap(gpxString);
+			// }, 6000);
+			mapElement.classList.add('active');
+			addRouteToMap(gpxString);
 		}
 	});
 
@@ -110,8 +123,53 @@
 			// 	}
 			// }).addTo(map);
 
-			const topoLayer = tileLayerL('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-				maxZoom: 17,
+			const { routeFeature, routeCenter } = await getGpxRouteAndCenterFromString(gpxString);
+
+			const latLngs = routeFeature.geometry.coordinates.map(
+				(coord) => new LatLng(coord[1], coord[0])
+			);
+			const bounds = getBoundingBoxParams(
+				initialMapCenter,
+				new LatLng(routeCenter.lat, routeCenter.lng)
+			);
+
+			// const tileLayerUrl = buildOpenTopoApiUrl({
+			// 	datasetName: 'USGS30m',
+			// 	...bounds,
+			// 	outputFormat: 'GTiff',
+			// 	apiKey: PUBLIC_OPEN_TOPO_API_KEY
+			// });
+
+			// if (!tileLayerUrl) {
+			// 	throw new Error('Error in creating tileLayerUrl');
+			// }
+
+			const topoLayerTiffArrayBuffer = await fetchOpenTopoGeoTiff({
+				datasetName: 'USGS30m',
+				...bounds,
+				outputFormat: 'GTiff'
+			});
+
+			console.log('topo layer array buffer: ', topoLayerTiffArrayBuffer);
+			// const topoLayerTiff = await topoLayerTiffRes.json();
+
+			// if (!topoLayerTiff) {
+			// 	throw new Error('Error in fetching tileLayerTiff');
+			// }
+
+			const topoLayerJpeg = await getJpegFromGeoTiff(topoLayerTiffArrayBuffer);
+
+			// const defaultTileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+
+			console.log('topo layer jpeg: ', topoLayerJpeg);
+
+			const topoLayer = tileLayerL(topoLayerJpeg, {
+				maxZoom: 20,
+				edgeBufferTiles: 10,
+				tube: {
+					start: initialMapCenter,
+					end: new LatLng(routeCenter.lat, routeCenter.lng)
+				},
 				attribution:
 					'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
 				className: 'leaflet-tile-container'
@@ -131,7 +189,7 @@
 		topoLayer.addTo(map);
 	}
 
-	async function initMap() {
+	async function getGpxRouteAndCenterFromString(gpxString: string) {
 		try {
 			const featureCollection = await convertGpxStringToGeoJson(gpxString);
 
@@ -153,12 +211,49 @@
 			const routeCenter = getGeoJsonRouteCenter(routeCoordinates);
 			// downloadGeoJSONasSVG(geoJsonRouteData, "my-map.svg");
 
+			return { routeFeature, routeCenter };
+		} catch (err: any) {
+			console.log('Error in getting gpx route and center from gpx string: ', err);
+			throw new Error(`Error in getting gpx route and center from gpx string: ${err}`);
+		}
+	}
+	async function addRouteToMap(gpxString: string) {
+		const { routeFeature, routeCenter } = await getGpxRouteAndCenterFromString(gpxString);
+
+		addGpxRoute(routeFeature, map);
+		updateMapCenter(routeCenter as LatLng);
+	}
+
+	function updateMapCenter(center: LatLng) {
+		map.flyTo(center, 12);
+	}
+
+	function getPreloadBounds(initialMapCenter: LatLng, routeCoordinates: LatLng[]) {
+		const allLatLngs = [initialMapCenter, ...routeCoordinates];
+
+		let minLat = allLatLngs[0].lat;
+		let maxLat = allLatLngs[0].lat;
+		let minLng = allLatLngs[0].lng;
+		let maxLng = allLatLngs[0].lng;
+
+		allLatLngs.forEach(({ lat, lng }) => {
+			if (lat < minLat) minLat = lat;
+			if (lat > maxLat) maxLat = lat;
+			if (lng < minLng) minLng = lng;
+			if (lng > maxLng) maxLng = lng;
+		});
+
+		return latLngBoundsL([minLat, minLng], [maxLat, maxLng]);
+	}
+
+	async function initMap() {
+		try {
 			map = mapConstructor(mapElement, {
 				renderer: createCanvas({ padding: 0.5 })
-			}).setView(routeCenter, 12);
+			}).setView(initialMapCenter, 17);
 
 			addContourMap(map);
-			addGpxRoute(routeFeature, map);
+			// addGpxRoute(routeFeature, map);
 		} catch (err) {
 			console.error(err);
 		}
@@ -178,6 +273,7 @@
 		height: 800px;
 		width: 100%;
 	}
+
 	div {
 		width: 100vw;
 		height: 100vh;

@@ -4,6 +4,7 @@
 	import harlowContour from '$lib/images/harlow-area-contour-2-01.jpg';
 	import harlowContourMobile from '$lib/images/harlow-area-contour-mobile-01.jpg';
 	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 	// import Map from '$lib/components/map/index.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -51,13 +52,16 @@
 		src={harlowContourMobile ?? ''}
 		alt="dark themed contour map of harlow lake recreation area in marquette, michigan"
 	/>
-	<div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
-		{#if lazyMap}
+
+	{#if lazyMap}
+		<div transition:fade={{ duration: 2000, delay: 1000 }} class="mx-auto w-screen">
 			{#await lazyMap then { default: Map }}
 				<Map />
 			{/await}
-		{/if}
-		<!-- {#if gpxString}
+		</div>
+	{/if}
+	<!-- <div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
+		{#if gpxString}
 		{:else}
 			<Form
 				data={form}
@@ -65,6 +69,6 @@
 				{delayedSetGpxString}
 				{setGpxString}
 			/>
-		{/if} -->
-	</div>
+		{/if} 
+	</div> -->
 </main>

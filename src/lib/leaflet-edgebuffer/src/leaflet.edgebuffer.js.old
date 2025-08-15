@@ -1,0 +1,91 @@
+/* global define, module, require, window */
+
+(function (factory, window) {
+  // define an AMD module that relies on 'leaflet'
+  if (typeof define === 'function' && define.amd) {
+    define(['leaflet'], factory);
+
+    // define a Common JS module that relies on 'leaflet'
+  } else if (typeof exports === 'object') {
+    module.exports = factory(require('leaflet'));
+  }
+
+  // attach your plugin to the global 'L' variable
+  if (typeof window !== 'undefined' && window.L && !window.L.EdgeBuffer) {
+    factory(window.L);
+  }
+}(function (L) {
+  L.EdgeBuffer = {
+    previousMethods: {
+      getTiledPixelBounds: L.GridLayer.prototype._getTiledPixelBounds
+    }
+  };
+
+  L.GridLayer.include({
+
+    _getTiledPixelBounds: function (center, zoom, tileZoom) {
+      var pixelBounds = L.EdgeBuffer.previousMethods.getTiledPixelBounds.call(this, center, zoom, tileZoom);
+
+      var edgeBufferTiles = this.options.edgeBufferTiles || 1;
+      if (edgeBufferTiles > 0) {
+        var pixelEdgeBuffer = L.GridLayer.prototype.getTileSize.call(this).multiplyBy(edgeBufferTiles);
+        pixelBounds = new L.Bounds(pixelBounds.min.subtract(pixelEdgeBuffer), pixelBounds.max.add(pixelEdgeBuffer));
+      }
+
+      // Preload tiles in a corridor (tube) between two points if 'tube' option is set
+      if (this.options.tube && this._map) {
+        var tileSize = this.getTileSize();
+        var zoom = this._map.getZoom();
+        var start = this.options.tube.start; // L.LatLng
+        var end = this.options.tube.end;   // L.LatLng
+        var widthPx = this.options.tube.widthPx || tileSize.x; // default to one tile width
+
+        // Convert start/end to pixel coordinates
+        var p1 = this._map.project(start, zoom);
+        var p2 = this._map.project(end, zoom);
+
+        // Calculate direction vector and perpendicular
+        var dx = p2.x - p1.x;
+        var dy = p2.y - p1.y;
+        var len = Math.sqrt(dx * dx + dy * dy);
+
+        if (len === 0) return pixelBounds;
+
+        var nx = -dy / len;
+        var ny = dx / len;
+
+        // For each step along the line, buffer by widthPx/2 perpendicular
+        var steps = Math.ceil(len / tileSize.x);
+        var tilesToLoad = new Set();
+        for (var i = 0; i <= steps; i++) {
+          var t = i / steps;
+          var cx = p1.x + dx * t;
+          var cy = p1.y + dy * t;
+          // For each step, get a rectangle perpendicular to the line
+          for (var w = -widthPx / 2; w <= widthPx / 2; w += tileSize.x / 2) {
+            var px = cx + nx * w;
+            var py = cy + ny * w;
+            var tileX = Math.floor(px / tileSize.x);
+            var tileY = Math.floor(py / tileSize.y);
+            tilesToLoad.add(zoom + ':' + tileX + ':' + tileY);
+          }
+        }
+        // Optionally, request tiles here (if you want to force load)
+        if (this._tiles) {
+          tilesToLoad.forEach(key => {
+            var parts = key.split(':');
+            var z = parseInt(parts[0]);
+            var x = parseInt(parts[1]);
+            var y = parseInt(parts[2]);
+            if (!this._tiles[z + ':' + x + ':' + y]) {
+              this._addTile({ x: x, y: y, z: z, scaleBy: function () { } });
+            }
+          });
+        }
+      }
+      return pixelBounds;
+    }
+  });
+
+
+}, window));

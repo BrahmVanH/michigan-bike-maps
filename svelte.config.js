@@ -27,7 +27,8 @@ const config = {
 					'https://www.google-analytics.com',
 					'https://www.googletagmanager.com',
 					'https://*.amazonaws.com',
-					'https://*.tile.opentopomap.org'
+					'https://*.tile.opentopomap.org',
+					'https://*.opentopography.org',
 				],
 				'connect-src': [
 					'self',
@@ -37,7 +38,9 @@ const config = {
 					'https://www.googletagmanager.com',
 					'https://api.iconify.design',
 					'https://api.unisvg.com',
-					'https://api.simplesvg.com'
+					'https://api.simplesvg.com',
+					'https://*.opentopography.org',
+
 				],
 				'worker-src': ['self', 'blob:'],
 				'child-src': ['self', 'blob:'],
