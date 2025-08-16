@@ -16,6 +16,8 @@
 	} from 'leaflet';
 	import '$lib/leaflet-edgebuffer';
 
+	import * as mapTilerClient from '@maptiler/client';
+
 	import {
 		convertGpxStringToGeoJson,
 		getColorFromElevation,
@@ -26,6 +28,7 @@
 
 	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
+	import { PUBLIC_MAP_TILER_API_KEY } from '$env/static/public';
 	// import { getJpegFromGeoTiff } from '@/wasm-loader';
 	// import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
 	// import { uint8ArrayToDataUrl } from '@/utils/geotiff';
@@ -184,6 +187,17 @@
 			const defaultTileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 
 			// console.log('topo layer jpeg: ', topoLayerJpegUrl);
+
+			mapTilerClient.config.fetch = fetch;
+			mapTilerClient.config.apiKey = PUBLIC_MAP_TILER_API_KEY;
+
+			const mapTile = mapTilerClient.staticMaps.centered(
+				[initialMapCenter.lng, initialMapCenter.lng],
+				16,
+				{
+					style: 'basic-vs-light'
+				}
+			);
 
 			const topoLayer = tileLayerL(defaultTileUrl, {
 				maxZoom: 20,
