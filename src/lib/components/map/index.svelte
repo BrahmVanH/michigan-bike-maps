@@ -15,6 +15,9 @@
 		Polyline
 	} from 'leaflet';
 	import '$lib/leaflet-edgebuffer';
+	import { MaptilerLayer, MapStyle, maptilerLayer } from '@maptiler/leaflet-maptilersdk';
+
+	import * as mapTilerClient from '@maptiler/client';
 
 	import {
 		convertGpxStringToGeoJson,
@@ -26,6 +29,7 @@
 
 	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
+	import { PUBLIC_MAP_TILER_API_KEY } from '$env/static/public';
 	// import { getJpegFromGeoTiff } from '@/wasm-loader';
 	// import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
 	// import { uint8ArrayToDataUrl } from '@/utils/geotiff';
@@ -35,8 +39,18 @@
 
 	// import geoJsonFile from '../data/geo/bareback-to-slackey.geojson?raw';
 
+	const mapStyleOptions = {
+		default: null,
+		aquarelleDark: MapStyle.AQUARELLE.DARK,
+		voyagerDark: MapStyle.VOYAGER.DARK,
+		winterDark: MapStyle.WINTER.DARK,
+		streetsNight: MapStyle.STREETS.NIGHT
+	};
+
 	let map: Map;
 	let mapElement: HTMLElement;
+	let selectedTheme = $state('default');
+	let currentMaptilerLayer = $state<LayerL | null>(null);
 
 	onMount(async () => {
 		if (mapElement) {
@@ -44,9 +58,13 @@
 			mapElement.offsetHeight;
 			const mapControlZoomEl = document.querySelector('.leaflet-control-zoom');
 			const mapControlAttrEl = document.querySelector('.leaflet-control-attribution');
+			const themeSelectorEl = document.querySelector('.theme-selector');
 
 			setTimeout(() => mapControlAttrEl?.classList.add('active'), 9000);
-			setTimeout(() => mapControlZoomEl?.classList.add('active'), 8000);
+			setTimeout(() => mapControlZoomEl?.classList.add('active'), 6000);
+			setTimeout(() => {
+				themeSelectorEl?.classList.add('active');
+			}, 6000);
 			setTimeout(() => mapElement.classList.add('active'), 200);
 			setTimeout(() => {
 				addRouteToMap(gpxString);
@@ -122,27 +140,6 @@
 
 	async function addContourMap(map: Map) {
 		try {
-			// const response = await fetch('src/lib/data/geo/marquette-county-contours-smoothed.geojson');
-			// const response = await fetch('src/lib/data/geo/harlow-contours-simplified.json?raw');
-			// const marquetteContourData = await response.json();
-			// console.log('json: ', marquetteContourData);
-
-			// L.geoJSON(marquetteContourData, {
-			// 	style: function (feature) {
-			// 		return {
-			// 			color: 'white',
-			// 			weight: 0.25,
-			// 			opacity: 1,
-			// 			fillOpacity: 1
-			// 		};
-			// 	},
-			// 	onEachFeature: (feature, layer) => {
-			// 		if (feature.properties && feature.properties.level) {
-			// 			layer.bindPopup(`Elevation: ${feature.properties.level}m`);
-			// 		}
-			// 	}
-			// }).addTo(map);
-
 			const { routeFeature, routeCenter } = await getGpxRouteAndCenterFromString(gpxString);
 
 			const latLngs = routeFeature.geometry.coordinates.map(
@@ -153,55 +150,80 @@
 				new LatLng(routeCenter.lat, routeCenter.lng)
 			);
 
-			// const tileLayerUrl = buildOpenTopoApiUrl({
-			// 	datasetName: 'USGS30m',
-			// 	...bounds,
-			// 	outputFormat: 'GTiff',
-			// 	apiKey: PUBLIC_OPEN_TOPO_API_KEY
-			// });
-
-			// if (!tileLayerUrl) {
-			// 	throw new Error('Error in creating tileLayerUrl');
-			// }
-
-			// const topoLayerTiffArrayBuffer = await fetchOpenTopoGeoTiff({
-			// 	datasetName: 'USGS30m',
-			// 	...bounds,
-			// 	outputFormat: 'GTiff'
-			// });
-
-			// console.log('topo layer array buffer: ', topoLayerTiffArrayBuffer);
-			// const topoLayerTiff = await topoLayerTiffRes.json();
-
-			// if (!topoLayerTiff) {
-			// 	throw new Error('Error in fetching tileLayerTiff');
-			// }
-
-			// const topoLayerJpeg = await getJpegFromGeoTiff(topoLayerTiffArrayBuffer);
-
-			// const topoLayerJpegUrl = uint8ArrayToDataUrl(topoLayerJpeg);
-
 			const defaultTileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 
-			// console.log('topo layer jpeg: ', topoLayerJpegUrl);
+			// const topoLayer = tileLayerL(mapTile, {
+			// 	maxZoom: 20,
+			// 	edgeBufferTiles: 10,
+			// 	tube: {
+			// 		start: initialMapCenter,
+			// 		end: new LatLng(routeCenter.lat, routeCenter.lng)
+			// 	},
+			// 	attribution:
+			// 		'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
+			// 	className: 'leaflet-tile-container'
+			// });
 
-			const topoLayer = tileLayerL(defaultTileUrl, {
-				maxZoom: 20,
-				edgeBufferTiles: 10,
-				tube: {
-					start: initialMapCenter,
-					end: new LatLng(routeCenter.lat, routeCenter.lng)
-				},
-				attribution:
-					'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
-				className: 'leaflet-tile-container'
-			});
-			topoLayer.addTo(map);
+			// const topoLayer = new MaptilerLayer({
+			// 	apiKey: PUBLIC_MAP_TILER_API_KEY,
+			// 	// style: MapStyle.AQUARELLE.DARK
+			// 	// style: MapStyle.VOYAGER.DARK
+			// 	// style: MapStyle.WINTER.DARK
+			// 	style: MapStyle.STREETS.NIGHT
+			// });
+			// topoLayer.addTo(map);
+			// currentMaptilerLayer = topoLayer;
+
+			setMapStyle(selectedTheme, map);
 		} catch (err) {
 			// console.error(err);
 		}
 	}
 
+	async function setMapStyle(style: string, map: Map) {
+		if (currentMaptilerLayer) {
+			map.removeLayer(currentMaptilerLayer);
+			currentMaptilerLayer = null;
+		}
+		if (style === 'default') {
+			setMapToDefault(map);
+			return;
+		}
+		const layer = new MaptilerLayer({
+			apiKey: PUBLIC_MAP_TILER_API_KEY,
+			style: mapStyleOptions[
+				style as keyof typeof mapStyleOptions
+			] as mapTilerClient.MapStyleVariant
+		});
+		// const params = new URLSearchParams();
+		// params.append('style', style);
+
+		// const url = `/api/maptiler?${params}`;
+		// const layerRes = await fetch(url);
+		// if (!layerRes.ok) {
+		// 	throw new Error('error in fetching maptiler layer');
+		// }
+		// const layer = await layerRes.json();
+
+		layer.addTo(map);
+		currentMaptilerLayer = layer;
+	}
+
+	function setMapToDefault(map: Map) {
+		const defaultTileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+
+		const topoLayer = tileLayerL(defaultTileUrl, {
+			maxZoom: 20,
+			edgeBufferTiles: 10,
+
+			attribution:
+				'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
+			className: 'leaflet-tile-container'
+		});
+
+		topoLayer.addTo(map);
+		currentMaptilerLayer = topoLayer;
+	}
 	async function addBaseLayer(map: Map) {
 		const topoLayer = tileLayerL('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
 			maxZoom: 17,
@@ -285,7 +307,22 @@
 	}
 </script>
 
-<div bind:this={mapElement} class="map"></div>
+<div bind:this={mapElement} class="map">
+	<div class="theme-selector">
+		<label>Theme:</label>
+		{#each Object.keys(mapStyleOptions) as key}
+			<button
+				class:selected={selectedTheme === key}
+				onclick={() => {
+					selectedTheme = key;
+					setMapStyle(key, map);
+				}}
+			>
+				{key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
+			</button>
+		{/each}
+	</div>
+</div>
 
 <svelte:window on:resize={resizeMap} />
 
@@ -293,6 +330,53 @@
 	.map {
 		height: 800px;
 		width: 100%;
+	}
+
+	.theme-selector {
+		position: absolute;
+		top: 24px;
+		right: 24px;
+		z-index: 1000;
+		background: rgba(30, 30, 30, 0.95);
+		border-radius: 8px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+		padding: 12px 18px;
+		height: min-content;
+		width: min-content;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-family: inherit;
+		color: #fff;
+		opacity: 0;
+		transition: opacity 1s ease-in-out;
+	}
+
+	:global(.theme-selector.active) {
+		opacity: 1 !important;
+	}
+	.theme-selector label {
+		font-weight: bold;
+		margin-right: 8px;
+		color: rgb(251, 146, 60);
+		letter-spacing: 1px;
+	}
+	.theme-selector button {
+		color: #fff;
+		border: none;
+		text-wrap: nowrap;
+		border-radius: 4px;
+		padding: 6px 14px;
+		cursor: pointer;
+		font-size: 0.75rem;
+		transition:
+			background 0.2s,
+			color 0.2s;
+	}
+	.theme-selector button.selected,
+	.theme-selector button:hover {
+		background: rgba(154, 52, 18, 0.6);
+		color: #fff;
 	}
 
 	div {

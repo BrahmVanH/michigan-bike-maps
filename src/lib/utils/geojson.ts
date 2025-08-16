@@ -1,6 +1,8 @@
 import GpxParser from 'gpxparser';
-import type { Position } from 'geojson';
+import type { Feature, FeatureCollection, Geometry, Position } from 'geojson';
 import toGeoJSON from '@mapbox/togeojson';
+
+export type { FeatureCollection } from 'geojson';
 
 export const gpxToString = (gpxData: any) => {
 	const gpx = new GpxParser();
@@ -148,3 +150,27 @@ export const getColorFromElevation = (x: number) => {
 // } else {
 //   return "rgb(51, 0, 102)"; // Vivid deep indigo
 // }
+
+
+
+export function lineStringToFeatureCollection(geoJsonObject: {
+	geometry: {
+		type: 'LineString',
+		coordinates: number[][];
+	};
+	[key: string]: any;
+}): FeatureCollection {
+	const { geometry, ...properties } = geoJsonObject;
+	const feature: Feature = {
+		type: 'Feature',
+		geometry: {
+			type: 'LineString',
+			coordinates: geometry.coordinates,
+		} as Geometry,
+		properties,
+	};
+	return {
+		type: 'FeatureCollection',
+		features: [feature],
+	};
+}
