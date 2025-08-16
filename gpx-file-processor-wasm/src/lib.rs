@@ -21,7 +21,7 @@ use wasm_bindgen::prelude::*;                  // WebAssembly bindings
 
 // Local module imports
 mod gpx_processing; // Module for GPX processing
-mod geo_tiff; // Module for GeoTIFF processing
+// mod geo_tiff; // Module for GeoTIFF processing
 mod logging;
 
 /// Simplified GPX structure for serialization and compression.

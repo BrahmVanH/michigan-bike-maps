@@ -26,7 +26,7 @@
 
 	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
-	import { getJpegFromGeoTiff } from '@/wasm-loader';
+	// import { getJpegFromGeoTiff } from '@/wasm-loader';
 	import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
 	import { uint8ArrayToDataUrl } from '@/utils/geotiff';
 

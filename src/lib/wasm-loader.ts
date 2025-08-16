@@ -130,22 +130,22 @@ export async function reduceCompressGpx(gpxString: string) {
  * @param src The GeoTIFF data to compress
  * @returns The Jpeg buffer of the GeoTiff data
  */
-export async function getJpegFromGeoTiff(tiff: ArrayBuffer): Promise<Uint8Array> {
-  const module = await loadWasmModule();
-  if (!module) throw new Error('WASM module not loaded');
+// export async function getJpegFromGeoTiff(tiff: ArrayBuffer): Promise<Uint8Array> {
+//   const module = await loadWasmModule();
+//   if (!module) throw new Error('WASM module not loaded');
 
-  console.log("tiff: ", tiff);
+//   console.log("tiff: ", tiff);
 
-  try {
-    if (typeof module.convert_geotiff_to_jpeg_buffer === 'function') {
-      return module.convert_geotiff_to_jpeg_buffer(tiff);
-    } else {
-      throw new Error('convert_geotiff_to_jpeg_buffer function not found in WASM module');
-    }
-  } catch (error) {
-    console.error('Error converting GeoTIFF data:', error);
-    throw new Error('Failed to convert GeoTIFF data. Please check file format and try again.');
-  }
-}
+//   try {
+//     if (typeof module.convert_geotiff_to_jpeg_buffer === 'function') {
+//       return module.convert_geotiff_to_jpeg_buffer(tiff);
+//     } else {
+//       throw new Error('convert_geotiff_to_jpeg_buffer function not found in WASM module');
+//     }
+//   } catch (error) {
+//     console.error('Error converting GeoTIFF data:', error);
+//     throw new Error('Failed to convert GeoTIFF data. Please check file format and try again.');
+//   }
+// }
 
 
