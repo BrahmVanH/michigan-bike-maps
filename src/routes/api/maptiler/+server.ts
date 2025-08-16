@@ -1,27 +1,27 @@
-// import type { RequestHandler } from '@sveltejs/kit';
-// // import { MAP_TILER_API_KEY, OPEN_TOPO_API_KEY } from '$env/static/private'; // Use your private env var
-// import { json } from '@sveltejs/kit';
+import type { RequestHandler } from '@sveltejs/kit';
+import { MAP_TILER_API_KEY } from '$env/static/private'; // Use your private env var
+import { json } from '@sveltejs/kit';
+import { MaptilerLayer, MapStyle } from '@maptiler/leaflet-maptilersdk';
+import type { MapStyleVariant } from '@maptiler/client';
 
-// import * as mapTilerClient from '@maptiler/client';
-// import { initialMapCenter } from '@/config/map';
 
-// export const GET: RequestHandler = async ({ url }) => {
-//   mapTilerClient.config.fetch = fetch;
-//   // mapTilerClient.config.apiKey = MAP_TILER_API_KEY;
 
-//   const mapTile = mapTilerClient.staticMaps.centered(
-//     [initialMapCenter.lng, initialMapCenter.lng],
-//     16,
-//     {
-//       style: 'basic-vs-light',
+export const GET: RequestHandler = async ({ url }) => {
+  const style = url.searchParams.get('style') ?? 'default';
+  const mapStyleOptions = {
+    default: null,
+    aquarelleDark: MapStyle.AQUARELLE.DARK,
+    voyagerDark: MapStyle.VOYAGER.DARK,
+    winterDark: MapStyle.WINTER.DARK,
+    streetsNight: MapStyle.STREETS.NIGHT
+  };
 
-//     }
-//   )
+  const layer = new MaptilerLayer({
+    apiKey: MAP_TILER_API_KEY,
+    style: mapStyleOptions[
+      style as keyof typeof mapStyleOptions
+    ] as MapStyleVariant
+  });
 
-//   return new Response(mapTile, {
-//     status: 200,
-//     headers: {
-//       'Content-Type': response.headers.get('Content-Type') ?? 'application/octet-stream'
-//     }
-//   });
-// }
+  return json(layer);
+}

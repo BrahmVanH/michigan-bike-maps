@@ -180,7 +180,7 @@
 		}
 	}
 
-	function setMapStyle(style: string, map: Map) {
+	async function setMapStyle(style: string, map: Map) {
 		if (currentMaptilerLayer) {
 			map.removeLayer(currentMaptilerLayer);
 			currentMaptilerLayer = null;
@@ -195,6 +195,16 @@
 				style as keyof typeof mapStyleOptions
 			] as mapTilerClient.MapStyleVariant
 		});
+		// const params = new URLSearchParams();
+		// params.append('style', style);
+
+		// const url = `/api/maptiler?${params}`;
+		// const layerRes = await fetch(url);
+		// if (!layerRes.ok) {
+		// 	throw new Error('error in fetching maptiler layer');
+		// }
+		// const layer = await layerRes.json();
+
 		layer.addTo(map);
 		currentMaptilerLayer = layer;
 	}
@@ -358,7 +368,7 @@
 		border-radius: 4px;
 		padding: 6px 14px;
 		cursor: pointer;
-		font-size: .75rem;
+		font-size: 0.75rem;
 		transition:
 			background 0.2s,
 			color 0.2s;
