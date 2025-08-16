@@ -108,7 +108,7 @@
 							clearInterval(fadeInterval);
 						}
 						polylines.forEach((polyline) => polyline.setStyle({ opacity }));
-					}, 750);
+					}, 1000);
 				}
 			}
 		});

@@ -34,7 +34,7 @@ export async function loadWasmModule() {
     return wasmModule;
 
   } catch (error) {
-    console.error('Failed to load WASM module:', error);
+    // console.error('Failed to load WASM module:', error);
 
     try {
 
@@ -72,7 +72,7 @@ export async function loadWasmModule() {
       });
 
     } catch (fallbackError) {
-      console.error('Fallback method also failed:', fallbackError);
+      // console.error('Fallback method also failed:', fallbackError);
       throw fallbackError;
     }
   } finally {
@@ -98,7 +98,7 @@ export async function processGpx(gpxString: string) {
       throw new Error('process_gpx_with_analytics function not found in WASM module');
     }
   } catch (error) {
-    console.error('Error processing GPX data:', error);
+    // console.error('Error processing GPX data:', error);
     throw new Error('Failed to process GPX data. Please check file format and try again.');
   }
 }

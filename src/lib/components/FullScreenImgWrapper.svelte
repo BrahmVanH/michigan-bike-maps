@@ -1,8 +1,13 @@
 <script lang="ts">
   import { browser } from '$app/environment';
+	import type { Snippet } from 'svelte';
 
+  interface Props {
+    className: string;
+    children: Snippet;
+  }
   // Props
-  let { className = '' } = $props();
+  let { className = '', children }: Props = $props();
 
   // State
   let isOpen = $state(false);
@@ -62,7 +67,7 @@
   onclick={openOverlay}
   aria-label="Click to view full size image"
 >
-  <slot />
+  {@render children()}
 </button>
 
 <!-- Full-screen overlay -->
@@ -98,7 +103,7 @@
 
       <!-- Full-size image container -->
       <div class="flex max-h-full max-w-full items-center justify-center">
-          <slot />
+          {@render children()}
       </div>
 
       <!-- Instructions text -->

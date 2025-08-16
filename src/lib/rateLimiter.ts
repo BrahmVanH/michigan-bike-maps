@@ -89,7 +89,7 @@ export async function checkRateLimit(event: RequestEvent) {
   // This counts as a hit towards the rate limit
   if (await uploadLimiter.isLimited(event)) {
     // Log the rate limit hit
-    console.warn(`[RATE LIMIT] IP: ${event.getClientAddress()} | Path: ${event.url.pathname}`);
+    // console.warn(`[RATE LIMIT] IP: ${event.getClientAddress()} | Path: ${event.url.pathname}`);
 
     // Return a structured response instead of throwing an error
     return {
