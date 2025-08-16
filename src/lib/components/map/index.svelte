@@ -50,7 +50,7 @@
 			setTimeout(() => mapElement.classList.add('active'), 200);
 			setTimeout(() => {
 				addRouteToMap(gpxString);
-			}, 5000);
+			}, 3000);
 			mapElement.classList.add('active');
 		}
 	});
