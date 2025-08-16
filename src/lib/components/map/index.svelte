@@ -45,12 +45,12 @@
 			const mapControlZoomEl = document.querySelector('.leaflet-control-zoom');
 			const mapControlAttrEl = document.querySelector('.leaflet-control-attribution');
 
-			setTimeout(() => mapControlAttrEl?.classList.add('active'), 7000);
-			setTimeout(() => mapControlZoomEl?.classList.add('active'), 6000);
+			setTimeout(() => mapControlAttrEl?.classList.add('active'), 9000);
+			setTimeout(() => mapControlZoomEl?.classList.add('active'), 8000);
 			setTimeout(() => mapElement.classList.add('active'), 200);
 			setTimeout(() => {
 				addRouteToMap(gpxString);
-			}, 3000);
+			}, 5000);
 			mapElement.classList.add('active');
 			addRouteToMap(gpxString);
 		}
