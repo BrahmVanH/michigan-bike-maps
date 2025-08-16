@@ -130,7 +130,7 @@ export async function reduceCompressGpx(gpxString: string) {
  * @param src The GeoTIFF data to compress
  * @returns The Jpeg buffer of the GeoTiff data
  */
-export async function getJpegFromGeoTiff(tiff: any) {
+export async function getJpegFromGeoTiff(tiff: ArrayBuffer): Promise<Uint8Array> {
   const module = await loadWasmModule();
   if (!module) throw new Error('WASM module not loaded');
 

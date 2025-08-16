@@ -52,23 +52,22 @@
 		src={harlowContourMobile ?? ''}
 		alt="dark themed contour map of harlow lake recreation area in marquette, michigan"
 	/>
-
-	{#if lazyMap}
-		<div transition:fade={{ duration: 2000, delay: 1000 }} class="mx-auto w-screen">
+	{#if gpxString}
+		{#if lazyMap}
 			{#await lazyMap then { default: Map }}
-				<Map />
+				<div transition:fade={{ duration: 2000, delay: 1000 }} class="mx-auto w-screen">
+					<Map {gpxString} />
+				</div>
 			{/await}
-		</div>
-	{/if}
-	<!-- <div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
-		{#if gpxString}
-		{:else}
+		{/if}
+	{:else}
+		<div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
 			<Form
 				data={form}
 				instructionsS3Objs={instructionsImgObjs}
 				{delayedSetGpxString}
 				{setGpxString}
 			/>
-		{/if} 
-	</div> -->
+		</div>
+	{/if}
 </main>

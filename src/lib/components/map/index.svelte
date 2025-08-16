@@ -27,8 +27,9 @@
 	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
 	import { getJpegFromGeoTiff } from '@/wasm-loader';
 	import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
+	import { uint8ArrayToDataUrl } from '@/utils/geotiff';
 
-	let { gpxString = devGpxString }: { gpxString?: string } = $props();
+	let { gpxString }: { gpxString: string } = $props();
 
 	// import geoJsonFile from '../data/geo/bareback-to-slackey.geojson?raw';
 
@@ -39,12 +40,15 @@
 		if (mapElement) {
 			initMap();
 			mapElement.offsetHeight;
-			// setTimeout(() => mapElement.classList.add('active'), 200);
-			// setTimeout(() => {
-			// 	addRouteToMap(gpxString);
-			// }, 6000);
-			mapElement.classList.add('active');
-			addRouteToMap(gpxString);
+			const mapControlZoomEl = document.querySelector('.leaflet-control-zoom');
+
+			setTimeout(() => mapControlZoomEl?.classList.add('active'), 6000);
+			setTimeout(() => mapElement.classList.add('active'), 200);
+			setTimeout(() => {
+				addRouteToMap(gpxString);
+			}, 3000);
+			// mapElement.classList.add('active');
+			// addRouteToMap(gpxString);
 		}
 	});
 
@@ -144,26 +148,30 @@
 			// 	throw new Error('Error in creating tileLayerUrl');
 			// }
 
-			const topoLayerTiffArrayBuffer = await fetchOpenTopoGeoTiff({
-				datasetName: 'USGS30m',
-				...bounds,
-				outputFormat: 'GTiff'
-			});
+			// const topoLayerTiffArrayBuffer = await fetchOpenTopoGeoTiff({
+			// 	datasetName: 'USGS30m',
+			// 	...bounds,
+			// 	outputFormat: 'GTiff'
+			// });
 
-			console.log('topo layer array buffer: ', topoLayerTiffArrayBuffer);
+			console.log('datasetName: USGS30m \n', 'bounds: ', bounds);
+
+			// console.log('topo layer array buffer: ', topoLayerTiffArrayBuffer);
 			// const topoLayerTiff = await topoLayerTiffRes.json();
 
 			// if (!topoLayerTiff) {
 			// 	throw new Error('Error in fetching tileLayerTiff');
 			// }
 
-			const topoLayerJpeg = await getJpegFromGeoTiff(topoLayerTiffArrayBuffer);
+			// const topoLayerJpeg = await getJpegFromGeoTiff(topoLayerTiffArrayBuffer);
 
-			// const defaultTileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+			// const topoLayerJpegUrl = uint8ArrayToDataUrl(topoLayerJpeg);
 
-			console.log('topo layer jpeg: ', topoLayerJpeg);
+			const defaultTileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 
-			const topoLayer = tileLayerL(topoLayerJpeg, {
+			// console.log('topo layer jpeg: ', topoLayerJpegUrl);
+
+			const topoLayer = tileLayerL(defaultTileUrl, {
 				maxZoom: 20,
 				edgeBufferTiles: 10,
 				tube: {
@@ -300,5 +308,17 @@
 		/* Desaturates and inverts colors */
 		/* You might need further adjustments for brightness/contrast */
 		/* filter: grayscale(100%) brightness(50%) contrast(150%); */
+	}
+
+	:global(.leaflet-control-zoom) {
+		opacity: 0;
+		transition:
+			opacity 1s ease-in-out,
+			transform 5s ease-out;
+		transform: translateY(-20px);
+	}
+
+	:global(.leaflet-control-zoom.active) {
+		opacity: 1 !important;
 	}
 </style>

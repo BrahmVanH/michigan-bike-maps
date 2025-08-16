@@ -16,7 +16,8 @@ export async function fetchOpenTopoGeoTiff(params: {
   });
 
   // const response = await fetch(`/api/opentopo?${query.toString()}`);
-  const response = await fetch('src/lib/test-data/demo-tif.tif');
+  // const response = await fetch('src/lib/test-data/local-tif.tif');
+  const response = await fetch('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.tif');
 
   if (!response.ok) {
     throw new Error('Failed to fetch OpenTopography data');
