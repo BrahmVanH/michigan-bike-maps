@@ -52,7 +52,6 @@
 				addRouteToMap(gpxString);
 			}, 5000);
 			mapElement.classList.add('active');
-			addRouteToMap(gpxString);
 		}
 	});
 
