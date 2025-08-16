@@ -1,6 +1,6 @@
 import { LatLng } from "leaflet";
 
-export const initialMapCenter = new LatLng(46.623198, -87.491945);
+export const initialMapCenter = new LatLng(46.623198, -87.4908000);
 export function buildOpenTopoApiUrl({
   datasetName,
   south,
@@ -18,7 +18,6 @@ export function buildOpenTopoApiUrl({
   outputFormat: string;
   apiKey: string;
 }): string {
-  console.log("api_key: ", apiKey)
   return `https://portal.opentopography.org/API/usgsdem?datasetName=${encodeURIComponent(datasetName)}&south=${south}&north=${north}&west=${west}&east=${east}&outputFormat=${encodeURIComponent(outputFormat)}&API_Key=${encodeURIComponent(apiKey)}`;
 }
 

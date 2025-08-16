@@ -24,13 +24,13 @@
 
 	import type { Feature, GeoJsonObject, Geometry, LineString } from 'geojson';
 
-	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
+	import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
 	// import { getJpegFromGeoTiff } from '@/wasm-loader';
 	import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
 	import { uint8ArrayToDataUrl } from '@/utils/geotiff';
 
-	let { gpxString }: { gpxString: string } = $props();
+	let { gpxString = devGpxString }: { gpxString?: string } = $props();
 
 	// import geoJsonFile from '../data/geo/bareback-to-slackey.geojson?raw';
 
@@ -42,12 +42,14 @@
 			initMap();
 			mapElement.offsetHeight;
 			const mapControlZoomEl = document.querySelector('.leaflet-control-zoom');
+			const mapControlAttrEl = document.querySelector('.leaflet-control-attribution');
 
+			setTimeout(() => mapControlAttrEl?.classList.add('active'), 7000);
 			setTimeout(() => mapControlZoomEl?.classList.add('active'), 6000);
 			setTimeout(() => mapElement.classList.add('active'), 200);
-			setTimeout(() => {
-				addRouteToMap(gpxString);
-			}, 3000);
+			// setTimeout(() => {
+			// 	addRouteToMap(gpxString);
+			// }, 3000);
 			// mapElement.classList.add('active');
 			// addRouteToMap(gpxString);
 		}
@@ -168,8 +170,6 @@
 			// 	outputFormat: 'GTiff'
 			// });
 
-			console.log('datasetName: USGS30m \n', 'bounds: ', bounds);
-
 			// console.log('topo layer array buffer: ', topoLayerTiffArrayBuffer);
 			// const topoLayerTiff = await topoLayerTiffRes.json();
 
@@ -198,7 +198,7 @@
 			});
 			topoLayer.addTo(map);
 		} catch (err) {
-			console.error(err);
+			// console.error(err);
 		}
 	}
 
@@ -235,7 +235,7 @@
 
 			return { routeFeature, routeCenter };
 		} catch (err: any) {
-			console.log('Error in getting gpx route and center from gpx string: ', err);
+			// console.error('Error in getting gpx route and center from gpx string: ', err);
 			throw new Error(`Error in getting gpx route and center from gpx string: ${err}`);
 		}
 	}
@@ -275,9 +275,9 @@
 			}).setView(initialMapCenter, 17);
 
 			addContourMap(map);
-			// addGpxRoute(routeFeature, map);
+			addGpxRoute(routeFeature, map);
 		} catch (err) {
-			console.error(err);
+			// console.error(err);
 		}
 	}
 
@@ -332,7 +332,20 @@
 		transform: translateY(-20px);
 	}
 
+	:global(.leaflet-control-attribution) {
+		opacity: 0;
+		transition:
+			opacity 1s ease-in-out,
+			transform 5s ease-out;
+		transform: translateY(-20px);
+		background-color: transparent !important;
+		color: white !important;
+	}
+
 	:global(.leaflet-control-zoom.active) {
+		opacity: 1 !important;
+	}
+	:global(.leaflet-control-attribution.active) {
 		opacity: 1 !important;
 	}
 </style>

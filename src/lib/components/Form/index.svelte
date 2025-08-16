@@ -168,7 +168,7 @@
 				return;
 			}
 		} catch (error) {
-			console.error('Error checking file content:', error);
+			// console.error('Error checking file content:', error);
 			isValid = false;
 			uploadMessage = 'Unable to validate file content';
 			return;
@@ -202,11 +202,11 @@
 						// In case the compression process changes the name for any reason
 						processedFileName = compressedFile.name;
 					} catch (error) {
-						console.error('Error setting file input:', error);
+						// console.error('Error setting file input:', error);
 					}
 				}
 			} catch (error) {
-				console.error('Error processing file with WASM:', error);
+				// console.error('Error processing file with WASM:', error);
 				uploadMessage = 'Error processing GPX file';
 				uploadSuccess = false;
 			}
@@ -219,7 +219,7 @@
 					dataTransfer.items.add(file);
 					formInput.files = dataTransfer.files;
 				} catch (error) {
-					console.error('Error setting file input:', error);
+					// console.error('Error setting file input:', error);
 				}
 			}
 		}
@@ -295,8 +295,9 @@ Uses a semi-transparent background to maintain contrast against map backgrounds
 -->
 <WasmLoader
 	bind:loaded={wasmLoaded}
-	on:load={({ detail }) => {
-		if (!detail.success) {
+	autoLoad={true}
+	onload={({ success, error }) => {
+		if (!success || error) {
 			uploadMessage = 'WebAssembly module failed to load. Some features may be limited.';
 		}
 	}}

@@ -60,7 +60,7 @@
 
 			return !!cookieConsent;
 		} catch (error) {
-			console.error('Error checking consent:', error);
+			// console.error('Error checking consent:', error);
 			return false;
 		}
 	}
@@ -83,7 +83,7 @@
 			}
 
 		} catch (error) {
-			console.error('Failed to save consent:', error);
+			// console.error('Failed to save consent:', error);
 		}
 	}
 

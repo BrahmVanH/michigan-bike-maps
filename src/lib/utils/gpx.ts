@@ -17,20 +17,18 @@ import * as gpxConfig from '$lib/config/gpx';
  * - `error`: error message if validation fails.
  */
 export async function validateUploadedGpxFile(file: File) {
-  console.log(`Validating GPX file: ${file.name}`);
+  // console.log(`Validating GPX file: ${file.name}`);
   const nameIsValid = isValidGpxFileRegex(file.name);
   if (!nameIsValid) {
-    console.error('❌ GPX validation failed: Error: GPX file name not valid');
+    // console.error('❌ GPX validation failed: Error: GPX file name not valid');
     return { success: false, content: "", error: "Error: GPX file name not valid" };
   }
   const result = await validateGpxContent(file);
 
   if (result.isValid) {
-    console.log('✅ GPX file is valid!');
-    console.log(`Content length: ${result?.content?.length} characters`);
     return { success: true, content: result.content ?? "", error: "" };
   } else {
-    console.error('❌ GPX validation failed:', result.error);
+    // console.error('❌ GPX validation failed:', result.error);
     return { success: false, content: "", error: result.error };
   }
 }
@@ -190,15 +188,6 @@ function testValidation() {
     undefined                    // Undefined
   ];
 
-  console.log('Valid files:');
-  validFiles.forEach(file => {
-    console.log(`${file}: ${isValidGpxFile(file)}`); // Should all be true
-  });
-
-  console.log('\nInvalid files:');
-  invalidFiles.forEach(file => {
-    console.log(`${file}: ${isValidGpxFile(file as string)}`); // Should all be false
-  });
 }
 
 /**

@@ -17,7 +17,7 @@ export const load = (async () => {
 
     instructionsImgObjs = await getPresignedUrlsforDirectory(instructionsS3Dir);
   } catch (err) {
-    console.error("Error fetching instructions images from s3", err);
+    // console.error("Error fetching instructions images from s3", err);
     instructionsImgObjs = []
   }
 
@@ -93,7 +93,7 @@ export const actions = {
         };
       }
     } catch (error) {
-      console.error('Error uploading to S3:', error);
+      // console.error('Error uploading to S3:', error);
 
       formData.delete('gpxFile');
 

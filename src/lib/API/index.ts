@@ -161,7 +161,7 @@ export async function getPresignedUrlsforDirectory(prefix: string, expiresIn = 3
 
     return presignedUrls;
   } catch (error) {
-    console.error('Error getting presigned URLs:', error);
+    // console.error('Error getting presigned URLs:', error);
     throw error;
   }
 }

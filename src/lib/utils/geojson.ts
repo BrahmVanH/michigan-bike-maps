@@ -6,7 +6,6 @@ export const gpxToString = (gpxData: any) => {
 	const gpx = new GpxParser();
 	gpx.parse(gpxData);
 	const gpxString = gpx.xmlSource;
-	console.log("gpxString: ", gpxString);
 	return gpxString;
 }
 
@@ -41,7 +40,6 @@ const getCenterOfGpxRoute = (gpxPositions: number[][]) => {
 	const maxLon = Math.max(...longitudes);
 
 	const center = { lat: (maxLat + minLat) / 2, lng: (maxLon + minLon) / 2 };
-	console.log(center);
 	return center;
 };
 
@@ -114,7 +112,7 @@ export const getColorFromElevation = (x: number) => {
 		// console.log('Color:', `rgb(${r}, ${g}, ${b})`); // Debugging statement
 		return `rgb(${r}, ${g}, ${b})`;
 	} catch (error) {
-		console.error('Error in getColorFromElevation:', error); // Error handling
+		// console.error('Error in getColorFromElevation:', error); // Error handling
 		return 'rgb(0, 0, 0)'; // Return a default color in case of error
 	}
 };

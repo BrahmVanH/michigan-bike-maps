@@ -37,7 +37,6 @@
 
 	onMount(() => {
 		loadMap();
-		console.log('typeof lazymap import: ', typeof lazyMap);
 	});
 </script>
 
@@ -52,22 +51,24 @@
 		src={harlowContourMobile ?? ''}
 		alt="dark themed contour map of harlow lake recreation area in marquette, michigan"
 	/>
-	{#if gpxString}
-		{#if lazyMap}
-			{#await lazyMap then { default: Map }}
-				<div transition:fade={{ duration: 2000, delay: 1000 }} class="mx-auto w-screen">
-					<Map {gpxString} />
-				</div>
-			{/await}
-		{/if}
-	{:else}
+	{#if lazyMap}
+		{#await lazyMap then { default: Map }}
+			<div transition:fade={{ duration: 2000, delay: 1000 }} class="mx-auto w-screen">
+				<Map />
+			</div>
+		{/await}
+	{/if}
+	<!-- 
 		<div class="mx-2 flex h-screen w-full lg:m-auto lg:block lg:h-min lg:max-w-[500px]">
+			{#if gpxString}
+			{:else}
 			<Form
-				data={form}
+			data={form}
 				instructionsS3Objs={instructionsImgObjs}
 				{delayedSetGpxString}
 				{setGpxString}
-			/>
-		</div>
-	{/if}
+				/>
+				{/if} 
+			</div>
+			-->
 </main>
