@@ -24,13 +24,14 @@
 
 	import type { Feature, GeoJsonObject, Geometry, LineString } from 'geojson';
 
-	import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
+	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
 	// import { getJpegFromGeoTiff } from '@/wasm-loader';
-	import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
-	import { uint8ArrayToDataUrl } from '@/utils/geotiff';
+	// import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
+	// import { uint8ArrayToDataUrl } from '@/utils/geotiff';
 
-	let { gpxString = devGpxString }: { gpxString?: string } = $props();
+	let { gpxString }: { gpxString: string } = $props();
+	// let { gpxString = devGpxString }: { gpxString?: string } = $props();
 
 	// import geoJsonFile from '../data/geo/bareback-to-slackey.geojson?raw';
 
@@ -47,11 +48,11 @@
 			setTimeout(() => mapControlAttrEl?.classList.add('active'), 7000);
 			setTimeout(() => mapControlZoomEl?.classList.add('active'), 6000);
 			setTimeout(() => mapElement.classList.add('active'), 200);
-			// setTimeout(() => {
-			// 	addRouteToMap(gpxString);
-			// }, 3000);
-			// mapElement.classList.add('active');
-			// addRouteToMap(gpxString);
+			setTimeout(() => {
+				addRouteToMap(gpxString);
+			}, 3000);
+			mapElement.classList.add('active');
+			addRouteToMap(gpxString);
 		}
 	});
 
@@ -275,7 +276,6 @@
 			}).setView(initialMapCenter, 17);
 
 			addContourMap(map);
-			addGpxRoute(routeFeature, map);
 		} catch (err) {
 			// console.error(err);
 		}
