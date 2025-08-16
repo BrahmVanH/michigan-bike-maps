@@ -11,7 +11,8 @@
 		type LatLngTuple,
 		type Map,
 		type Layer as LayerL,
-		LatLng
+		LatLng,
+		Polyline
 	} from 'leaflet';
 	import '$lib/leaflet-edgebuffer';
 
@@ -72,6 +73,7 @@
 						...latlngs.map((coord) => coord[2]).filter((elevation) => elevation !== undefined)
 					);
 
+					let polylines: Polyline[] = [];
 					latlngs.forEach((coord, index) => {
 						if (coord.length < 3 || !coord[2]) return;
 						if (index === 0) return;
@@ -90,18 +92,30 @@
 						const polyline = polylineL([prevCoord, coord], {
 							color: color,
 							weight: 5,
-							opacity: 1,
+							opacity: 0,
 							className: 'elevation-line' // Add a class for easier debugging
 						});
 						routeGroup.addLayer(polyline as unknown as LayerL);
+
+						polylines.push(polyline);
 					});
+
+					let opacity = 0;
+					const fadeInterval = setInterval(() => {
+						opacity += 0.05;
+						if (opacity >= 1) {
+							opacity = 1;
+							clearInterval(fadeInterval);
+						}
+						polylines.forEach((polyline) => polyline.setStyle({ opacity }));
+					}, 750);
 				}
 			}
 		});
 
 		routeGroup.addTo(map);
 
-		map.fitBounds(routeGroup.getBounds());
+		// map.fitBounds(routeGroup.getBounds());
 	}
 
 	async function addContourMap(map: Map) {
@@ -233,7 +247,7 @@
 	}
 
 	function updateMapCenter(center: LatLng) {
-		map.flyTo(center, 12);
+		map.flyTo(center, 13);
 	}
 
 	function getPreloadBounds(initialMapCenter: LatLng, routeCoordinates: LatLng[]) {
