@@ -29,6 +29,7 @@ const config = {
 					'https://*.amazonaws.com',
 					'https://*.tile.opentopomap.org',
 					'https://*.opentopography.org',
+					"https://*.maptiler.com"
 				],
 				'connect-src': [
 					'self',
@@ -40,6 +41,8 @@ const config = {
 					'https://api.unisvg.com',
 					'https://api.simplesvg.com',
 					'https://*.opentopography.org',
+					"https://*.maptiler.com"
+
 
 				],
 				'worker-src': ['self', 'blob:'],
