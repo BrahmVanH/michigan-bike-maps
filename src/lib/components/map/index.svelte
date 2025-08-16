@@ -23,7 +23,7 @@
 
 	import type { Feature, GeoJsonObject, Geometry, LineString } from 'geojson';
 
-	import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
+	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
 	import { getJpegFromGeoTiff } from '@/wasm-loader';
 	import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
