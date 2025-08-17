@@ -44,5 +44,10 @@ export default defineConfig({
 	},
 	optimizeDeps: {
 		exclude: ['@wasm/gpx_file_processor_wasm']
+	},
+	build: {
+		rollupOptions: {
+			// external: ['maplibre-gl']
+		}
 	}
 });

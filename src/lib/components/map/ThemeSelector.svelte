@@ -7,14 +7,14 @@
 	interface Props {
 		selectedTheme: MapThemeOptions;
 		setSelectedTheme: (arg0: MapThemeOptions) => void;
-		setMapStyle: (style: MapThemeOptions) => void;
+		setMapTheme: (style: MapThemeOptions) => void;
 		setGpxRouteStyle: (theme: MapThemeOptions) => void;
 	}
 
 	let {
 		selectedTheme = $bindable(),
 		setSelectedTheme,
-		setMapStyle,
+		setMapTheme,
 		setGpxRouteStyle
 	}: Props = $props();
 
@@ -23,7 +23,7 @@
 	function handleThemeSelect(e: MouseEvent, key: MapThemeOptions) {
 		e.preventDefault();
 		setSelectedTheme(key as MapThemeOptions);
-		setMapStyle(key as MapThemeOptions);
+		setMapTheme(key as MapThemeOptions);
 		setGpxRouteStyle(key as MapThemeOptions);
 	}
 

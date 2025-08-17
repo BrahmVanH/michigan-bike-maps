@@ -12,10 +12,8 @@
 		LatLng,
 		FeatureGroup
 	} from 'leaflet';
-	import '$lib/leaflet-edgebuffer';
-	import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk';
 
-	import * as mapTilerClient from '@maptiler/client';
+	import { MapStyleVariant } from '@maptiler/client';
 
 	import { createGpxRouteGroup } from '$lib/utils/geojson';
 
@@ -23,9 +21,9 @@
 
 	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
 	import { initialMapCenter, mapThemeOptions, MapThemeOptions } from '@/config/map';
-	import { PUBLIC_MAP_TILER_API_KEY } from '$env/static/public';
 	import ThemeSelector from './ThemeSelector.svelte';
 	import { getGpxRouteAndCenterFromString } from '@/utils/gpx';
+	import { createNewMapTilerLayer } from '@/utils/maptiler';
 
 	let { gpxString }: { gpxString: string } = $props();
 	// let { gpxString = devGpxString }: { gpxString?: string } = $props();
@@ -37,6 +35,7 @@
 	let selectedTheme = $state(MapThemeOptions.default);
 	let currentMaptilerLayer = $state<LayerL | null>(null);
 	let currentGpxRouteLayer = $state<FeatureGroup<any> | null>(null);
+	// let leaflet = $state<any>(null);
 
 	onMount(async () => {
 		if (mapElement) {
@@ -62,7 +61,7 @@
 
 	async function addBaseMap() {
 		try {
-			setMapStyle(selectedTheme);
+			setMapTheme(selectedTheme);
 			setGpxRouteStyle();
 		} catch (err) {
 			// console.error(err);
@@ -80,21 +79,18 @@
 		map.flyTo(center, 13);
 	}
 
-	async function setMapStyle(style: MapThemeOptions) {
+	async function setMapTheme(theme: MapThemeOptions) {
 		if (currentMaptilerLayer) {
 			map.removeLayer(currentMaptilerLayer);
 			currentMaptilerLayer = null;
 		}
-		if (style === 'default') {
+		if (theme === 'default') {
 			setMapToDefault(map);
 			return;
 		}
-		const layer = new MaptilerLayer({
-			apiKey: PUBLIC_MAP_TILER_API_KEY,
-			style: mapThemeOptions[
-				style as keyof typeof mapThemeOptions
-			] as mapTilerClient.MapStyleVariant
-		});
+		const maptilerStyle = mapThemeOptions[theme as keyof typeof mapThemeOptions] as MapStyleVariant;
+
+		const layer = createNewMapTilerLayer(maptilerStyle);
 
 		layer.addTo(map);
 		currentMaptilerLayer = layer;
@@ -105,7 +101,6 @@
 
 		const topoLayer = tileLayerL(defaultTileUrl, {
 			maxZoom: 20,
-			edgeBufferTiles: 10,
 
 			attribution:
 				'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
@@ -150,7 +145,7 @@
 <div bind:this={mapElement} class="map"></div>
 
 <svelte:window on:resize={resizeMap} />
-<ThemeSelector {selectedTheme} {setSelectedTheme} {setMapStyle} {setGpxRouteStyle} />
+<ThemeSelector {selectedTheme} {setSelectedTheme} {setMapTheme} {setGpxRouteStyle} />
 
 <style>
 	.map {
@@ -214,5 +209,9 @@
 	}
 	:global(.leaflet-control-attribution.active) {
 		opacity: 1 !important;
+	}
+
+	:global(.elevation-line) {
+		transition: opacity 2s ease-in-out;
 	}
 </style>

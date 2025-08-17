@@ -1,6 +1,6 @@
 import GpxParser from 'gpxparser';
 import type { Feature, FeatureCollection, GeoJsonObject, Geometry, Position } from 'geojson';
-import toGeoJSON from '@mapbox/togeojson';
+import * as togeojson from '@mapbox/togeojson';
 import { MapThemeOptions, colorStopVariants } from '@/config/map';
 import { featureGroup, latLngBounds, Layer, polyline as polylineL, Polyline, type LatLng, type LatLngTuple } from 'leaflet';
 
@@ -71,7 +71,7 @@ const getGpxPositions = (gpxData: GpxParser) => {
 export const convertGpxStringToGeoJson = (gpxString: string) => {
 	const parser = new DOMParser();
 	const gpxDoc = parser.parseFromString(gpxString, 'text/xml');
-	const geoJson = toGeoJSON.gpx(gpxDoc);
+	const geoJson = togeojson.gpx(gpxDoc);
 	// saveGeoJsonFile(geoJson, "bareback-to-slackey.geojson");
 	return geoJson;
 };
@@ -205,7 +205,11 @@ function getPreloadBounds(initialMapCenter: LatLng, routeCoordinates: LatLng[]) 
 	return latLngBounds([minLat, minLng], [maxLat, maxLng]);
 }
 
-export function createGpxRouteGroup(geoJsonData: GeoJsonObject, fadeIn: boolean, selectedTheme: MapThemeOptions) {
+export function createGpxRouteGroup(
+	geoJsonData: GeoJsonObject,
+	fadeIn: boolean,
+	selectedTheme: MapThemeOptions
+) {
 	const routeGroup = featureGroup();
 
 	const features: Feature<any>[] = (geoJsonData as any).features ?? [geoJsonData as Feature<any>];
@@ -229,18 +233,18 @@ export function createGpxRouteGroup(geoJsonData: GeoJsonObject, fadeIn: boolean,
 				const elevation = (coord[2] + prevCoord[2]) / 2;
 				const normalizedElevation = elevation / maxElevation;
 				const color = getColorFromElevation(normalizedElevation, selectedTheme);
+				const opacity = fadeIn ? 0 : 1;
 
 				const polyline = polylineL([prevCoord, coord], {
 					color: color,
 					weight: 5,
-					opacity: fadeIn ? 0 : 1,
+					opacity,
 					className: 'elevation-line'
 				});
 				routeGroup.addLayer(polyline as unknown as Layer);
 
 				polylines.push(polyline);
 			});
-
 			if (fadeIn) {
 				let opacity = 0;
 				const fadeInterval = setInterval(() => {
@@ -250,7 +254,22 @@ export function createGpxRouteGroup(geoJsonData: GeoJsonObject, fadeIn: boolean,
 						clearInterval(fadeInterval);
 					}
 					polylines.forEach((polyline) => polyline.setStyle({ opacity }));
-				}, 1000);
+				}, 900);
+				// let start: number | null = null;
+				// const duration = 5000; // 2 seconds
+
+				// function animateFade(timestamp: number) {
+				// 	if (!start) start = timestamp;
+				// 	const elapsed = timestamp - start;
+				// 	let opacity = Math.min(elapsed / duration, 1);
+
+				// 	polylines.forEach((polyline) => polyline.setStyle({ opacity }));
+
+				// 	if (opacity < 1) {
+				// 		requestAnimationFrame(animateFade);
+				// 	}
+				// }
+				// requestAnimationFrame(animateFade);
 			}
 		}
 	});

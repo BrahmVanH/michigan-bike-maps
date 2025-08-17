@@ -13,7 +13,7 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"modulize-wasm": "node ./gpx-file-processor-wasm/modulize.js",
-		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web  --out-dir ../static/wasm && npm run modulize-wasm",
+		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --release --out-dir ../static/wasm && npm run modulize-wasm",
 		"modulize-wasm:netlify": "node ./gpx-file-processor-wasm/modulize.js netlify",
 		"wasm:netlify": "cd gpx-file-processor-wasm && wasm-pack build --target web --release && cd .. && npm run modulize-wasm:netlify"
 	},
@@ -36,6 +36,7 @@
 		"formsnap": "^2.0.1",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
+		"prettier-plugin-tailwindcss": "^0.6.14",
 		"rollup-plugin-visualizer": "^6.0.3",
 		"svelte": "^5.38.1",
 		"svelte-check": "^4.3.1",
@@ -46,7 +47,9 @@
 		"tw-animate-css": "^1.3.7",
 		"typescript": "^5.9.2",
 		"vaul-svelte": "^1.0.0-next.7",
-		"vite": "^7.1.2"
+		"vite": "^7.1.2",
+		"@wasm-tool/rollup-plugin-rust": "^3.0.5"
+
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.864.0",
@@ -54,14 +57,11 @@
 		"@mapbox/togeojson": "^0.16.2",
 		"@maptiler/client": "^2.5.0",
 		"@maptiler/leaflet-maptilersdk": "^4.1.0",
-		"@maptiler/sdk": "^3.7.0",
 		"@poppanator/sveltekit-svg": "^5.0.1",
 		"@qwik.dev/partytown": "^0.11.2",
-		"@wasm-tool/rollup-plugin-rust": "^3.0.5",
 		"gpxparser": "^3.0.8",
 		"leaflet": "^1.9.4",
 		"leaflet-edgebuffer": "^1.0.7",
-		"prettier-plugin-tailwindcss": "^0.6.14",
 		"sveltekit-rate-limiter": "^0.7.0",
 		"uuid": "^11.1.0",
 		"vite-plugin-wasm-pack": "^0.1.12"
