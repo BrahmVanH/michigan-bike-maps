@@ -47,3 +47,10 @@ export function getBoundingBoxParams(pointA: LatLng, pointB: LatLng) {
 
   return { south, north, west, east };
 }
+
+export type ColorStops = ColorStop[];
+
+type ColorStop = {
+  elevation: number;
+  color: string;
+}

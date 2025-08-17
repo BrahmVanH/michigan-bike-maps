@@ -2,20 +2,34 @@
 	import { mapThemeOptions, MapThemeOptions } from '@/config/map';
 
 	import { onMount } from 'svelte';
+	import Label from '../ui/label/label.svelte';
 
 	interface Props {
 		selectedTheme: MapThemeOptions;
 		setSelectedTheme: (arg0: MapThemeOptions) => void;
 		setMapStyle: (style: MapThemeOptions) => void;
+		setGpxRouteStyle: (theme: MapThemeOptions) => void;
 	}
 
-	let { selectedTheme = $bindable(), setSelectedTheme, setMapStyle }: Props = $props();
+	let {
+		selectedTheme = $bindable(),
+		setSelectedTheme,
+		setMapStyle,
+		setGpxRouteStyle
+	}: Props = $props();
 
 	let value = $state(selectedTheme);
 
 	const triggerContent = $derived(
 		mapThemeOptions[selectedTheme as MapThemeOptions] ?? 'Select a theme'
 	);
+
+	function handleThemeSelect(e: MouseEvent, key: MapThemeOptions) {
+		e.preventDefault();
+		setSelectedTheme(key as MapThemeOptions);
+		setMapStyle(key as MapThemeOptions);
+		setGpxRouteStyle(key as MapThemeOptions);
+	}
 
 	onMount(() => {
 		const themeSelectorEl = document.querySelector('.theme-selector');
@@ -26,14 +40,11 @@
 </script>
 
 <div class="theme-selector hidden lg:flex">
-	<label>Theme:</label>
+	<Label>Theme:</Label>
 	{#each Object.keys(mapThemeOptions) as key}
 		<button
 			class:selected={selectedTheme === key}
-			onclick={() => {
-				setSelectedTheme(key as MapThemeOptions);
-				setMapStyle(key as MapThemeOptions);
-			}}
+			onclick={(e) => handleThemeSelect(e, key as MapThemeOptions)}
 		>
 			{key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
 		</button>

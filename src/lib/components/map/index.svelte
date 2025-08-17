@@ -15,7 +15,8 @@
 		type Map,
 		type Layer as LayerL,
 		LatLng,
-		Polyline
+		Polyline,
+		FeatureGroup
 	} from 'leaflet';
 	import '$lib/leaflet-edgebuffer';
 	import { MaptilerLayer, MapStyle, maptilerLayer } from '@maptiler/leaflet-maptilersdk';
@@ -52,6 +53,8 @@
 	let mapElement: HTMLElement;
 	let selectedTheme = $state(MapThemeOptions.default);
 	let currentMaptilerLayer = $state<LayerL | null>(null);
+	let currentGpxRouteLayer = $state<FeatureGroup<any> | null>(null);
+	let currentRouteFeature = $state<Feature<any> | null>(null);
 
 	onMount(async () => {
 		if (mapElement) {
@@ -75,7 +78,7 @@
 		selectedTheme = themeName;
 	}
 
-	function addGpxRoute(geoJsonData: GeoJsonObject, map: Map) {
+	function addGpxRoute(geoJsonData: GeoJsonObject) {
 		const routeGroup = featureGroupL();
 
 		const geoJsonLayer = geoJSONL(geoJsonData, {
@@ -104,7 +107,7 @@
 
 						const elevation = (coord[2] + prevCoord[2]) / 2;
 						const normalizedElevation = elevation / maxElevation;
-						const color = getColorFromElevation(normalizedElevation);
+						const color = getColorFromElevation(normalizedElevation, selectedTheme);
 
 						// Debug log
 						// console.log(
@@ -136,6 +139,7 @@
 		});
 
 		routeGroup.addTo(map);
+		currentGpxRouteLayer = routeGroup;
 
 		// map.fitBounds(routeGroup.getBounds());
 	}
@@ -177,9 +181,18 @@
 			// currentMaptilerLayer = topoLayer;
 
 			setMapStyle(selectedTheme);
+			setGpxRouteStyle();
 		} catch (err) {
 			// console.error(err);
 		}
+	}
+
+	async function setGpxRouteStyle() {
+		if (currentGpxRouteLayer) {
+			map.removeLayer(currentGpxRouteLayer);
+			currentGpxRouteLayer = null;
+		}
+		addRouteToMap(gpxString);
 	}
 
 	async function setMapStyle(style: MapThemeOptions) {
@@ -266,7 +279,7 @@
 	async function addRouteToMap(gpxString: string) {
 		const { routeFeature, routeCenter } = await getGpxRouteAndCenterFromString(gpxString);
 
-		addGpxRoute(routeFeature, map);
+		addGpxRoute(routeFeature);
 		updateMapCenter(routeCenter as LatLng);
 	}
 
@@ -312,7 +325,7 @@
 <div bind:this={mapElement} class="map"></div>
 
 <svelte:window on:resize={resizeMap} />
-<ThemeSelector {selectedTheme} {setSelectedTheme} {setMapStyle} />
+<ThemeSelector {selectedTheme} {setSelectedTheme} {setMapStyle} {setGpxRouteStyle} />
 
 <style>
 	.map {

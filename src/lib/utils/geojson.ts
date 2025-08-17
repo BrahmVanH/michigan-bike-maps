@@ -1,6 +1,9 @@
 import GpxParser from 'gpxparser';
 import type { Feature, FeatureCollection, Geometry, Position } from 'geojson';
 import toGeoJSON from '@mapbox/togeojson';
+import type { ColorStops } from '@/types/geojson';
+import { MapThemeOptions } from '@/config/map';
+import { colorStopVariants } from '@/config/geojson';
 
 export type { FeatureCollection } from 'geojson';
 
@@ -17,6 +20,21 @@ export const getRouteCenter = (gpxRouteData: string) => {
 	const positions = getGpxPositions(gpx);
 	return getCenterOfGpxRoute(positions);
 };
+
+const getColorStopVariant = (mapTheme: MapThemeOptions) => {
+	switch (mapTheme) {
+		case MapThemeOptions.default:
+			return colorStopVariants.default;
+		case MapThemeOptions.aquarelleDark:
+			return colorStopVariants.aquarelleDark;
+		case MapThemeOptions.streetsNight:
+			return colorStopVariants.streetsNight;
+		case MapThemeOptions.voyagerDark:
+			return colorStopVariants.iridescent;
+		case MapThemeOptions.winterDark:
+			return colorStopVariants.winterDark;
+	}
+}
 
 export const getGeoJsonRouteCenter = (routeCoordinates: number[][]) => {
 	// const positions = geoJsonRouteData.features[0].geometry.coordinates;
@@ -59,17 +77,10 @@ export const convertGpxStringToGeoJson = (gpxString: string) => {
 	return geoJson;
 };
 
-export const getColorFromElevation = (x: number) => {
+export const getColorFromElevation = (x: number, mapTheme: MapThemeOptions) => {
 	try {
-		// console.log('Elevation value:', x); // Debugging statement
-		const colorStops = [
-			{ elevation: 0, color: 'rgb(51, 0, 102)' }, // Vivid deep indigo
-			{ elevation: 0.2, color: 'rgb(102, 0, 153)' }, // Vivid dark magenta
-			{ elevation: 0.4, color: 'rgb(153, 0, 153)' }, // Vivid magenta
-			{ elevation: 0.6, color: 'rgb(255, 105, 180)' }, // Vivid hot pink
-			{ elevation: 0.8, color: 'rgb(0, 76, 153)' }, // Vivid nebula blue
-			{ elevation: 1, color: 'rgb(0, 76, 153)' } // Vivid nebula blue (repeated for consistency)
-		];
+
+		const colorStops = getColorStopVariant(mapTheme);
 
 		x = Math.max(0, Math.min(1, x));
 
@@ -118,6 +129,8 @@ export const getColorFromElevation = (x: number) => {
 		return 'rgb(0, 0, 0)'; // Return a default color in case of error
 	}
 };
+
+
 
 // if (x > 0.933) {
 //   return "rgb(0, 76, 153)"; // Vivid nebula blue
