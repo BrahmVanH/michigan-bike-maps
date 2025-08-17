@@ -1,3 +1,6 @@
+<script module lang="ts">
+</script>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
@@ -28,8 +31,14 @@
 	import type { Feature, GeoJsonObject, Geometry, LineString } from 'geojson';
 
 	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
-	import { getBoundingBoxParams, initialMapCenter } from '@/config/map';
+	import {
+		getBoundingBoxParams,
+		initialMapCenter,
+		mapThemeOptions,
+		MapThemeOptions
+	} from '@/config/map';
 	import { PUBLIC_MAP_TILER_API_KEY } from '$env/static/public';
+	import ThemeSelector from './ThemeSelector.svelte';
 	// import { getJpegFromGeoTiff } from '@/wasm-loader';
 	// import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
 	// import { uint8ArrayToDataUrl } from '@/utils/geotiff';
@@ -39,17 +48,9 @@
 
 	// import geoJsonFile from '../data/geo/bareback-to-slackey.geojson?raw';
 
-	const mapStyleOptions = {
-		default: null,
-		aquarelleDark: MapStyle.AQUARELLE.DARK,
-		voyagerDark: MapStyle.VOYAGER.DARK,
-		winterDark: MapStyle.WINTER.DARK,
-		streetsNight: MapStyle.STREETS.NIGHT
-	};
-
 	let map: Map;
 	let mapElement: HTMLElement;
-	let selectedTheme = $state('default');
+	let selectedTheme = $state(MapThemeOptions.default);
 	let currentMaptilerLayer = $state<LayerL | null>(null);
 
 	onMount(async () => {
@@ -58,13 +59,10 @@
 			mapElement.offsetHeight;
 			const mapControlZoomEl = document.querySelector('.leaflet-control-zoom');
 			const mapControlAttrEl = document.querySelector('.leaflet-control-attribution');
-			const themeSelectorEl = document.querySelector('.theme-selector');
 
 			setTimeout(() => mapControlAttrEl?.classList.add('active'), 9000);
 			setTimeout(() => mapControlZoomEl?.classList.add('active'), 6000);
-			setTimeout(() => {
-				themeSelectorEl?.classList.add('active');
-			}, 6000);
+
 			setTimeout(() => mapElement.classList.add('active'), 200);
 			setTimeout(() => {
 				addRouteToMap(gpxString);
@@ -72,6 +70,10 @@
 			mapElement.classList.add('active');
 		}
 	});
+
+	function setSelectedTheme(themeName: MapThemeOptions) {
+		selectedTheme = themeName;
+	}
 
 	function addGpxRoute(geoJsonData: GeoJsonObject, map: Map) {
 		const routeGroup = featureGroupL();
@@ -174,13 +176,13 @@
 			// topoLayer.addTo(map);
 			// currentMaptilerLayer = topoLayer;
 
-			setMapStyle(selectedTheme, map);
+			setMapStyle(selectedTheme);
 		} catch (err) {
 			// console.error(err);
 		}
 	}
 
-	async function setMapStyle(style: string, map: Map) {
+	async function setMapStyle(style: MapThemeOptions) {
 		if (currentMaptilerLayer) {
 			map.removeLayer(currentMaptilerLayer);
 			currentMaptilerLayer = null;
@@ -191,8 +193,8 @@
 		}
 		const layer = new MaptilerLayer({
 			apiKey: PUBLIC_MAP_TILER_API_KEY,
-			style: mapStyleOptions[
-				style as keyof typeof mapStyleOptions
+			style: mapThemeOptions[
+				style as keyof typeof mapThemeOptions
 			] as mapTilerClient.MapStyleVariant
 		});
 		// const params = new URLSearchParams();
@@ -307,76 +309,16 @@
 	}
 </script>
 
-<div bind:this={mapElement} class="map">
-	<div class="theme-selector">
-		<label>Theme:</label>
-		{#each Object.keys(mapStyleOptions) as key}
-			<button
-				class:selected={selectedTheme === key}
-				onclick={() => {
-					selectedTheme = key;
-					setMapStyle(key, map);
-				}}
-			>
-				{key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}
-			</button>
-		{/each}
-	</div>
-</div>
+<div bind:this={mapElement} class="map"></div>
 
 <svelte:window on:resize={resizeMap} />
+<ThemeSelector {selectedTheme} {setSelectedTheme} {setMapStyle} />
 
 <style>
 	.map {
 		height: 800px;
 		width: 100%;
-	}
-
-	.theme-selector {
-		position: absolute;
-		top: 24px;
-		right: 24px;
-		z-index: 1000;
-		background: rgba(30, 30, 30, 0.95);
-		border-radius: 8px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-		padding: 12px 18px;
-		height: min-content;
-		width: min-content;
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		font-family: inherit;
-		color: #fff;
-		opacity: 0;
-		transition: opacity 1s ease-in-out;
-	}
-
-	:global(.theme-selector.active) {
-		opacity: 1 !important;
-	}
-	.theme-selector label {
-		font-weight: bold;
-		margin-right: 8px;
-		color: rgb(251, 146, 60);
-		letter-spacing: 1px;
-	}
-	.theme-selector button {
-		color: #fff;
-		border: none;
-		text-wrap: nowrap;
-		border-radius: 4px;
-		padding: 6px 14px;
-		cursor: pointer;
-		font-size: 0.75rem;
-		transition:
-			background 0.2s,
-			color 0.2s;
-	}
-	.theme-selector button.selected,
-	.theme-selector button:hover {
-		background: rgba(154, 52, 18, 0.6);
-		color: #fff;
+		z-index: 500;
 	}
 
 	div {
@@ -387,15 +329,18 @@
 	/* These globals ensure the black background shows up */
 	:global(.leaflet-container) {
 		background-color: #000000 !important;
+		z-index: 500;
 	}
 
 	:global(.leaflet-control-container .leaflet-pane) {
 		background-color: #000000;
+		z-index: 500;
 	}
 
 	/* Makes sure the canvas background is also black */
 	:global(.leaflet-canvas-layer) {
 		background-color: #000000;
+		z-index: 500;
 	}
 
 	:global(.leaflet-tile-container) {
@@ -413,6 +358,7 @@
 			opacity 1s ease-in-out,
 			transform 5s ease-out;
 		transform: translateY(-20px);
+		z-index: 500;
 	}
 
 	:global(.leaflet-control-attribution) {

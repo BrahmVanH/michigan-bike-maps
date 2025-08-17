@@ -1,6 +1,24 @@
+import { MapStyle } from "@maptiler/client";
 import { LatLng } from "leaflet";
 
 export const initialMapCenter = new LatLng(46.623198, -87.4908000);
+
+export enum MapThemeOptions {
+  default = "default",
+  aquarelleDark = "aquarelleDark",
+  voyagerDark = "voyagerDark",
+  winterDark = "winterDark",
+  streetsNight = "streetsNight"
+}
+
+export const mapThemeOptions = {
+  default: null,
+  aquarelleDark: MapStyle.AQUARELLE.DARK,
+  voyagerDark: MapStyle.VOYAGER.DARK,
+  winterDark: MapStyle.WINTER.DARK,
+  streetsNight: MapStyle.STREETS.NIGHT
+};
+
 export function buildOpenTopoApiUrl({
   datasetName,
   south,
