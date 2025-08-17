@@ -13,9 +13,9 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"modulize-wasm": "node ./gpx-file-processor-wasm/modulize.js",
-		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web --out-dir ../static/wasm && npm run modulize-wasm",
+		"wasm": "wasm-pack build ./gpx-file-processor-wasm --target web  --out-dir ../static/wasm && npm run modulize-wasm",
 		"modulize-wasm:netlify": "node ./gpx-file-processor-wasm/modulize.js netlify",
-		"wasm:netlify": "cd gpx-file-processor-wasm && wasm-pack build --target web && cd .. && npm run modulize-wasm:netlify"
+		"wasm:netlify": "cd gpx-file-processor-wasm && wasm-pack build --target web --release && cd .. && npm run modulize-wasm:netlify"
 	},
 	"devDependencies": {
 		"@iconify/svelte": "^5.0.1",
@@ -36,6 +36,7 @@
 		"formsnap": "^2.0.1",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
+		"rollup-plugin-visualizer": "^6.0.3",
 		"svelte": "^5.38.1",
 		"svelte-check": "^4.3.1",
 		"sveltekit-superforms": "^2.27.1",

@@ -6,9 +6,13 @@ import wasmPack from 'vite-plugin-wasm-pack';
 import { defineConfig } from 'vite';
 import { partytownVite } from '@qwik.dev/partytown/utils';
 import path from 'path';
+import { visualizer } from 'rollup-plugin-visualizer';
+
 
 export default defineConfig({
-	plugins: [enhancedImages(), tailwindcss(), sveltekit(), partytownVite({
+	plugins: [enhancedImages(), tailwindcss(), sveltekit(),
+	visualizer({ open: true, filename: 'stats.html', gzipSize: true, brotliSize: true }),
+	partytownVite({
 		dest: path.join(__dirname, "static", "~partytown")
 	}), svg({
 		includePaths: ['./src/lib/images/'],
