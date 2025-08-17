@@ -41,7 +41,7 @@
 	// Reactive state
 	let showBanner = $state(false);
 	let showDialog = $state(false);
-	let bannerElement: HTMLDivElement;
+	let bannerElement: HTMLDivElement | null = $state(null);
 	let dialogElement: HTMLDialogElement;
 
 	// Check if user has already consented
@@ -81,7 +81,6 @@
 			if ((window as any).updateGoogleAnalyticsConsent) {
 				(window as any).updateGoogleAnalyticsConsent(settings);
 			}
-
 		} catch (error) {
 			// console.error('Failed to save consent:', error);
 		}

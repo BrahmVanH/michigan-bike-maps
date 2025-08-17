@@ -54,7 +54,7 @@ export const actions = {
 
       const fileName = uuidv4() + '.gpx.gz';
 
-      
+
       // Redeclare validated form schema without gpxFile for serialization... seems i may 
       // have followed a thread that does make sense. GpxFile is the only field in the form,
       //  why return the validated form with no fields? Looking into it later
@@ -63,7 +63,7 @@ export const actions = {
       form = await superValidate(formData, zod(formSchema));
 
 
-      if (import.meta.env.DEV) {
+      if (import.meta.env.DEV || import.meta.env.MODE === 'prev') {
         return {
           form,
           uploadResult: {

@@ -1,9 +1,8 @@
 import GpxParser from 'gpxparser';
-import type { Feature, FeatureCollection, Geometry, Position } from 'geojson';
+import type { Feature, FeatureCollection, GeoJsonObject, Geometry, Position } from 'geojson';
 import toGeoJSON from '@mapbox/togeojson';
-import type { ColorStops } from '@/types/geojson';
-import { MapThemeOptions } from '@/config/map';
-import { colorStopVariants } from '@/config/geojson';
+import { MapThemeOptions, colorStopVariants } from '@/config/map';
+import { featureGroup, latLngBounds, Layer, polyline as polylineL, Polyline, type LatLng, type LatLngTuple } from 'leaflet';
 
 export type { FeatureCollection } from 'geojson';
 
@@ -186,4 +185,75 @@ export function lineStringToFeatureCollection(geoJsonObject: {
 		type: 'FeatureCollection',
 		features: [feature],
 	};
+}
+
+function getPreloadBounds(initialMapCenter: LatLng, routeCoordinates: LatLng[]) {
+	const allLatLngs = [initialMapCenter, ...routeCoordinates];
+
+	let minLat = allLatLngs[0].lat;
+	let maxLat = allLatLngs[0].lat;
+	let minLng = allLatLngs[0].lng;
+	let maxLng = allLatLngs[0].lng;
+
+	allLatLngs.forEach(({ lat, lng }) => {
+		if (lat < minLat) minLat = lat;
+		if (lat > maxLat) maxLat = lat;
+		if (lng < minLng) minLng = lng;
+		if (lng > maxLng) maxLng = lng;
+	});
+
+	return latLngBounds([minLat, minLng], [maxLat, maxLng]);
+}
+
+export function createGpxRouteGroup(geoJsonData: GeoJsonObject, fadeIn: boolean, selectedTheme: MapThemeOptions) {
+	const routeGroup = featureGroup();
+
+	const features: Feature<any>[] = (geoJsonData as any).features ?? [geoJsonData as Feature<any>];
+
+	features.forEach((feature) => {
+		if (feature.geometry.type === 'LineString') {
+			const coordinates = feature.geometry.coordinates as [number, number, number][];
+			const latlngs = coordinates.map((coord) => [coord[1], coord[0], coord[2]] as LatLngTuple);
+
+			const maxElevation = Math.max(
+				...latlngs.map((coord) => coord[2]).filter((elevation) => elevation !== undefined)
+			);
+
+			let polylines: Polyline[] = [];
+			latlngs.forEach((coord, index) => {
+				if (coord.length < 3 || !coord[2]) return;
+				if (index === 0) return;
+				const prevCoord = latlngs[index - 1];
+				if (prevCoord.length < 3 || !prevCoord[2]) return;
+
+				const elevation = (coord[2] + prevCoord[2]) / 2;
+				const normalizedElevation = elevation / maxElevation;
+				const color = getColorFromElevation(normalizedElevation, selectedTheme);
+
+				const polyline = polylineL([prevCoord, coord], {
+					color: color,
+					weight: 5,
+					opacity: fadeIn ? 0 : 1,
+					className: 'elevation-line'
+				});
+				routeGroup.addLayer(polyline as unknown as Layer);
+
+				polylines.push(polyline);
+			});
+
+			if (fadeIn) {
+				let opacity = 0;
+				const fadeInterval = setInterval(() => {
+					opacity += 0.05;
+					if (opacity >= 1) {
+						opacity = 1;
+						clearInterval(fadeInterval);
+					}
+					polylines.forEach((polyline) => polyline.setStyle({ opacity }));
+				}, 1000);
+			}
+		}
+	});
+
+	return routeGroup;
 }

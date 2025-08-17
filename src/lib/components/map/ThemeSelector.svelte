@@ -18,11 +18,7 @@
 		setGpxRouteStyle
 	}: Props = $props();
 
-	let value = $state(selectedTheme);
 
-	const triggerContent = $derived(
-		mapThemeOptions[selectedTheme as MapThemeOptions] ?? 'Select a theme'
-	);
 
 	function handleThemeSelect(e: MouseEvent, key: MapThemeOptions) {
 		e.preventDefault();

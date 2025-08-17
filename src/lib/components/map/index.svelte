@@ -6,43 +6,26 @@
 	import {
 		canvas as createCanvas,
 		map as mapConstructor,
-		featureGroup as featureGroupL,
-		geoJSON as geoJSONL,
-		polyline as polylineL,
 		tileLayer as tileLayerL,
-		latLngBounds as latLngBoundsL,
-		type LatLngTuple,
 		type Map,
 		type Layer as LayerL,
 		LatLng,
-		Polyline,
 		FeatureGroup
 	} from 'leaflet';
 	import '$lib/leaflet-edgebuffer';
-	import { MaptilerLayer, MapStyle, maptilerLayer } from '@maptiler/leaflet-maptilersdk';
+	import { MaptilerLayer } from '@maptiler/leaflet-maptilersdk';
 
 	import * as mapTilerClient from '@maptiler/client';
 
-	import {
-		convertGpxStringToGeoJson,
-		getColorFromElevation,
-		getGeoJsonRouteCenter
-	} from '$lib/utils/geojson';
+	import { createGpxRouteGroup } from '$lib/utils/geojson';
 
-	import type { Feature, GeoJsonObject, Geometry, LineString } from 'geojson';
+	import type { GeoJsonObject } from 'geojson';
 
 	// import devGpxString from '$lib/test-data/Afternoon_Ride.gpx?raw';
-	import {
-		getBoundingBoxParams,
-		initialMapCenter,
-		mapThemeOptions,
-		MapThemeOptions
-	} from '@/config/map';
+	import { initialMapCenter, mapThemeOptions, MapThemeOptions } from '@/config/map';
 	import { PUBLIC_MAP_TILER_API_KEY } from '$env/static/public';
 	import ThemeSelector from './ThemeSelector.svelte';
-	// import { getJpegFromGeoTiff } from '@/wasm-loader';
-	// import { fetchOpenTopoGeoTiff } from '@/API/opentopo';
-	// import { uint8ArrayToDataUrl } from '@/utils/geotiff';
+	import { getGpxRouteAndCenterFromString } from '@/utils/gpx';
 
 	let { gpxString }: { gpxString: string } = $props();
 	// let { gpxString = devGpxString }: { gpxString?: string } = $props();
@@ -54,7 +37,6 @@
 	let selectedTheme = $state(MapThemeOptions.default);
 	let currentMaptilerLayer = $state<LayerL | null>(null);
 	let currentGpxRouteLayer = $state<FeatureGroup<any> | null>(null);
-	let currentRouteFeature = $state<Feature<any> | null>(null);
 
 	onMount(async () => {
 		if (mapElement) {
@@ -78,160 +60,8 @@
 		selectedTheme = themeName;
 	}
 
-	function addGpxRoute(geoJsonData: GeoJsonObject, fadeIn: boolean) {
-		const routeGroup = createGpxRouteGroup(geoJsonData, fadeIn);
-		routeGroup.addTo(map);
-		currentGpxRouteLayer = routeGroup;
-
-		// map.fitBounds(routeGroup.getBounds());
-	}
-
-	function createGpxRouteGroup(geoJsonData: GeoJsonObject, fadeIn: boolean) {
-		const routeGroup = featureGroupL();
-
-		const features: Feature<any>[] = (geoJsonData as any).features ?? [geoJsonData as Feature<any>];
-
-		features.forEach((feature) => {
-			if (feature.geometry.type === 'LineString') {
-				const coordinates = feature.geometry.coordinates as [number, number, number][];
-				const latlngs = coordinates.map((coord) => [coord[1], coord[0], coord[2]] as LatLngTuple);
-
-				const maxElevation = Math.max(
-					...latlngs.map((coord) => coord[2]).filter((elevation) => elevation !== undefined)
-				);
-
-				let polylines: Polyline[] = [];
-				latlngs.forEach((coord, index) => {
-					if (coord.length < 3 || !coord[2]) return;
-					if (index === 0) return;
-					const prevCoord = latlngs[index - 1];
-					if (prevCoord.length < 3 || !prevCoord[2]) return;
-
-					const elevation = (coord[2] + prevCoord[2]) / 2;
-					const normalizedElevation = elevation / maxElevation;
-					const color = getColorFromElevation(normalizedElevation, selectedTheme);
-
-					const polyline = polylineL([prevCoord, coord], {
-						color: color,
-						weight: 5,
-						opacity: fadeIn ? 0 : 1,
-						className: 'elevation-line'
-					});
-					routeGroup.addLayer(polyline as unknown as LayerL);
-
-					polylines.push(polyline);
-				});
-
-				if (fadeIn) {
-					let opacity = 0;
-					const fadeInterval = setInterval(() => {
-						opacity += 0.05;
-						if (opacity >= 1) {
-							opacity = 1;
-							clearInterval(fadeInterval);
-						}
-						polylines.forEach((polyline) => polyline.setStyle({ opacity }));
-					}, 1000);
-				}
-			}
-		});
-
-		// const _geoJsonLayer = geoJSONL(geoJsonData, {
-		// 	style: function (feature) {
-		// 		return {
-		// 			color: 'transparent',
-		// 			weight: 0,
-		// 			opacity: 0
-		// 		};
-		// 	},
-		// 	onEachFeature: function (feature, layer) {
-		// 		if (feature.geometry.type === 'LineString') {
-		// 			const coordinates = feature.geometry.coordinates as [number, number, number][];
-		// 			const latlngs = coordinates.map((coord) => [coord[1], coord[0], coord[2]] as LatLngTuple);
-
-		// 			const maxElevation = Math.max(
-		// 				...latlngs.map((coord) => coord[2]).filter((elevation) => elevation !== undefined)
-		// 			);
-
-		// 			let polylines: Polyline[] = [];
-		// 			latlngs.forEach((coord, index) => {
-		// 				if (coord.length < 3 || !coord[2]) return;
-		// 				if (index === 0) return;
-		// 				const prevCoord = latlngs[index - 1];
-		// 				if (prevCoord.length < 3 || !prevCoord[2]) return;
-
-		// 				const elevation = (coord[2] + prevCoord[2]) / 2;
-		// 				const normalizedElevation = elevation / maxElevation;
-		// 				const color = getColorFromElevation(normalizedElevation, selectedTheme);
-
-		// 				// Debug log
-		// 				// console.log(
-		// 				//   `Creating polyline with color: ${color}, elevation: ${elevation}`,
-		// 				// );
-
-		// 				const polyline = polylineL([prevCoord, coord], {
-		// 					color: color,
-		// 					weight: 5,
-		// 					opacity: 0,
-		// 					className: 'elevation-line' // Add a class for easier debugging
-		// 				});
-		// 				routeGroup.addLayer(polyline as unknown as LayerL);
-
-		// 				polylines.push(polyline);
-		// 			});
-
-		// 			let opacity = 0;
-		// 			const fadeInterval = setInterval(() => {
-		// 				opacity += 0.05;
-		// 				if (opacity >= 1) {
-		// 					opacity = 1;
-		// 					clearInterval(fadeInterval);
-		// 				}
-		// 				polylines.forEach((polyline) => polyline.setStyle({ opacity }));
-		// 			}, 1000);
-		// 		}
-		// 	}
-		// });
-
-		return routeGroup;
-	}
-
-	async function addContourMap(map: Map) {
+	async function addBaseMap() {
 		try {
-			const { routeFeature, routeCenter } = await getGpxRouteAndCenterFromString(gpxString);
-
-			const latLngs = routeFeature.geometry.coordinates.map(
-				(coord) => new LatLng(coord[1], coord[0])
-			);
-			const bounds = getBoundingBoxParams(
-				initialMapCenter,
-				new LatLng(routeCenter.lat, routeCenter.lng)
-			);
-
-			const defaultTileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
-
-			// const topoLayer = tileLayerL(mapTile, {
-			// 	maxZoom: 20,
-			// 	edgeBufferTiles: 10,
-			// 	tube: {
-			// 		start: initialMapCenter,
-			// 		end: new LatLng(routeCenter.lat, routeCenter.lng)
-			// 	},
-			// 	attribution:
-			// 		'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
-			// 	className: 'leaflet-tile-container'
-			// });
-
-			// const topoLayer = new MaptilerLayer({
-			// 	apiKey: PUBLIC_MAP_TILER_API_KEY,
-			// 	// style: MapStyle.AQUARELLE.DARK
-			// 	// style: MapStyle.VOYAGER.DARK
-			// 	// style: MapStyle.WINTER.DARK
-			// 	style: MapStyle.STREETS.NIGHT
-			// });
-			// topoLayer.addTo(map);
-			// currentMaptilerLayer = topoLayer;
-
 			setMapStyle(selectedTheme);
 			setGpxRouteStyle();
 		} catch (err) {
@@ -239,12 +69,15 @@
 		}
 	}
 
-	async function setGpxRouteStyle() {
-		if (currentGpxRouteLayer) {
-			map.removeLayer(currentGpxRouteLayer);
-			currentGpxRouteLayer = null;
-		}
-		addRouteToMap(gpxString, false);
+	async function addRouteToMap(gpxString: string, fadeIn: boolean) {
+		const { routeFeature, routeCenter } = await getGpxRouteAndCenterFromString(gpxString);
+
+		addGpxRoute(routeFeature, fadeIn);
+		updateMapCenter(routeCenter as LatLng);
+	}
+
+	function updateMapCenter(center: LatLng) {
+		map.flyTo(center, 13);
 	}
 
 	async function setMapStyle(style: MapThemeOptions) {
@@ -262,15 +95,6 @@
 				style as keyof typeof mapThemeOptions
 			] as mapTilerClient.MapStyleVariant
 		});
-		// const params = new URLSearchParams();
-		// params.append('style', style);
-
-		// const url = `/api/maptiler?${params}`;
-		// const layerRes = await fetch(url);
-		// if (!layerRes.ok) {
-		// 	throw new Error('error in fetching maptiler layer');
-		// }
-		// const layer = await layerRes.json();
 
 		layer.addTo(map);
 		currentMaptilerLayer = layer;
@@ -291,70 +115,19 @@
 		topoLayer.addTo(map);
 		currentMaptilerLayer = topoLayer;
 	}
-	async function addBaseLayer(map: Map) {
-		const topoLayer = tileLayerL('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-			maxZoom: 17,
-			attribution:
-				'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)'
-		});
-		topoLayer.addTo(map);
+
+	function addGpxRoute(geoJsonData: GeoJsonObject, fadeIn: boolean) {
+		const routeGroup = createGpxRouteGroup(geoJsonData, fadeIn, selectedTheme);
+		routeGroup.addTo(map);
+		currentGpxRouteLayer = routeGroup;
 	}
 
-	async function getGpxRouteAndCenterFromString(gpxString: string) {
-		try {
-			const featureCollection = await convertGpxStringToGeoJson(gpxString);
-
-			const routeFeature = featureCollection.features.find(
-				(feature: Feature<Geometry>) => feature.geometry.type === 'LineString'
-			) as Feature<LineString>;
-
-			if (!routeFeature) {
-				throw new Error('No valid route found in GPX file');
-			}
-
-			const routeCoordinates = routeFeature.geometry.coordinates;
-
-			if (!routeCoordinates) {
-				throw new Error('No route coordinates found in GeoJSON file');
-			}
-			// const geoJsonRouteData = convertToGeoJson(gpxRouteData);
-			// const routeCenter = getRouteCenter(gpxRouteData);
-			const routeCenter = getGeoJsonRouteCenter(routeCoordinates);
-			// downloadGeoJSONasSVG(geoJsonRouteData, "my-map.svg");
-
-			return { routeFeature, routeCenter };
-		} catch (err: any) {
-			// console.error('Error in getting gpx route and center from gpx string: ', err);
-			throw new Error(`Error in getting gpx route and center from gpx string: ${err}`);
+	async function setGpxRouteStyle() {
+		if (currentGpxRouteLayer) {
+			map.removeLayer(currentGpxRouteLayer);
+			currentGpxRouteLayer = null;
 		}
-	}
-	async function addRouteToMap(gpxString: string, fadeIn: boolean) {
-		const { routeFeature, routeCenter } = await getGpxRouteAndCenterFromString(gpxString);
-
-		addGpxRoute(routeFeature, fadeIn);
-		updateMapCenter(routeCenter as LatLng);
-	}
-
-	function updateMapCenter(center: LatLng) {
-		map.flyTo(center, 13);
-	}
-
-	function getPreloadBounds(initialMapCenter: LatLng, routeCoordinates: LatLng[]) {
-		const allLatLngs = [initialMapCenter, ...routeCoordinates];
-
-		let minLat = allLatLngs[0].lat;
-		let maxLat = allLatLngs[0].lat;
-		let minLng = allLatLngs[0].lng;
-		let maxLng = allLatLngs[0].lng;
-
-		allLatLngs.forEach(({ lat, lng }) => {
-			if (lat < minLat) minLat = lat;
-			if (lat > maxLat) maxLat = lat;
-			if (lng < minLng) minLng = lng;
-			if (lng > maxLng) maxLng = lng;
-		});
-
-		return latLngBoundsL([minLat, minLng], [maxLat, maxLng]);
+		addRouteToMap(gpxString, false);
 	}
 
 	async function initMap() {
@@ -363,7 +136,7 @@
 				renderer: createCanvas({ padding: 0.5 })
 			}).setView(initialMapCenter, 17);
 
-			addContourMap(map);
+			addBaseMap();
 		} catch (err) {
 			// console.error(err);
 		}

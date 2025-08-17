@@ -9,7 +9,7 @@
 		children?: Snippet;
 	}
 
-	let { autoLoad, loaded = $bindable(false), onload, children }: Props = $props();
+	let { autoLoad, loaded = $bindable(false), onload }: Props = $props();
 
 
 	$effect(() => {

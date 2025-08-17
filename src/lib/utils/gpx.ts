@@ -1,4 +1,6 @@
 import * as gpxConfig from '$lib/config/gpx';
+import type { Feature, Geometry, LineString } from 'geojson';
+import { convertGpxStringToGeoJson, getGeoJsonRouteCenter } from './geojson';
 
 
 /**
@@ -565,4 +567,36 @@ async function extractCompressedGpxContent(file: File) {
     }
   }
 
+}
+
+
+export async function getGpxRouteAndCenterFromString(gpxString: string) {
+  try {
+    const featureCollection = await convertGpxStringToGeoJson(gpxString);
+
+    const routeFeature = featureCollection.features.find(
+      (feature: Feature<Geometry>) => feature.geometry.type === 'LineString'
+    ) as Feature<LineString>;
+
+    if (!routeFeature) {
+      throw new Error('No valid route found in GPX file');
+    }
+
+    const routeCoordinates = routeFeature.geometry.coordinates;
+
+    if (!routeCoordinates) {
+      throw new Error('No route coordinates found in GeoJSON file');
+    }
+    // const geoJsonRouteData = convertToGeoJson(gpxRouteData);
+    // const routeCenter = getRouteCenter(gpxRouteData);
+
+    const routeCenter = getGeoJsonRouteCenter(routeCoordinates);
+    
+    // downloadGeoJSONasSVG(geoJsonRouteData, "my-map.svg");
+
+    return { routeFeature, routeCenter };
+  } catch (err: any) {
+    // console.error('Error in getting gpx route and center from gpx string: ', err);
+    throw new Error(`Error in getting gpx route and center from gpx string: ${err}`);
+  }
 }
